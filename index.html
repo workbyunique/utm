@@ -1,2366 +1,2357 @@
-<html>
+<!DOCTYPE html>
+
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiptune Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        background: #1a1a1a;
+        color: #e8e8e8;
+        overflow: hidden;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .top-panel {
+        background: #242424;
+        border-bottom: 1px solid #2a2a2a;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .top-panel h1 {
+        font-size: 16px;
+        font-weight: 500;
+        flex: 1 1 auto;
+        min-width: 120px;
+    }
+    
+    .top-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    button {
+        background: #2a2a2a;
+        color: #e8e8e8;
+        border: 1px solid #3a3a3a;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.15s;
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+    
+    button:hover {
+        background: #333;
+    }
+    
+    button:active {
+        background: #3a3a3a;
+    }
+    
+    input[type="text"], input[type="number"] {
+        background: #1a1a1a;
+        color: #e8e8e8;
+        border: 1px solid #3a3a3a;
+        padding: 10px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        min-height: 44px;
+    }
+    
+    .tracker-container {
+        flex: 1;
+        overflow: auto;
+        padding: 12px;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .tracker-grid {
+        display: grid;
+        grid-template-columns: 40px repeat(6, minmax(70px, 1fr));
+        gap: 3px;
+        font-size: 11px;
+        max-width: 1200px;
+        margin: 0 auto;
+        min-width: min-content;
+    }
+    
+    @media (max-width: 768px) {
+        .tracker-grid {
+            grid-template-columns: 30px repeat(6, minmax(50px, 1fr));
+            font-size: 9px;
+            gap: 2px;
+        }
+        
+        .header-cell {
+            padding: 8px 4px;
+            font-size: 10px;
+        }
+        
+        .step-number {
+            padding: 8px 4px;
+            font-size: 10px;
+        }
+        
+        .note-cell {
+            padding: 8px 4px;
+            font-size: 9px;
+            min-height: 40px;
+            min-width: 50px;
+        }
+        
+        .top-panel h1 {
+            font-size: 14px;
+        }
+        
+        button {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        input[type="text"], input[type="number"] {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+        
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+        
+        .inst-chip {
+            padding: 6px 10px;
+            font-size: 11px;
+            min-height: 40px;
+        }
+        
+        .modal-content {
+            width: 95%;
+            max-height: 90vh;
+        }
+        
+        .modal-body {
+            padding: 16px;
+        }
+        
+        .note-grid {
+            grid-template-columns: repeat(3, 1fr);
+            padding: 12px;
+        }
+        
+        .note-item {
+            padding: 12px;
+            font-size: 13px;
+            min-height: 44px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tracker-grid {
+            grid-template-columns: 25px repeat(6, minmax(45px, 1fr));
+            font-size: 8px;
+        }
+        
+        .top-panel {
+            padding: 8px 12px;
+        }
+        
+        .bottom-controls {
+            padding: 8px 12px;
+        }
+        
+        .note-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .tracker-grid {
+            grid-template-columns: 50px repeat(6, minmax(90px, 1fr));
+            font-size: 12px;
+        }
+        
+        .note-cell {
+            min-width: 80px;
+            font-size: 11px;
+        }
+    }
+    
+    .header-cell {
+        background: #242424;
+        padding: 12px;
+        text-align: center;
+        border-radius: 4px;
+        border: 1px solid #2a2a2a;
+        color: #999;
+    }
+    
+    .step-number {
+        background: #242424;
+        padding: 12px 6px;
+        text-align: center;
+        border-radius: 4px;
+        border: 1px solid #2a2a2a;
+        color: #666;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .step-number.measure-start {
+        border-bottom: 3px solid #666;
+        font-weight: 600;
+    }
+    
+    .note-cell {
+        background: #242424;
+        padding: 12px 6px;
+        text-align: center;
+        cursor: pointer;
+        border: 1px solid #2a2a2a;
+        border-radius: 4px;
+        min-height: 44px;
+        min-width: 60px;
+        color: #666;
+        font-size: 10px;
+        line-height: 1.3;
+        user-select: none;
+        -webkit-user-select: none;
+        transition: all 0.1s;
+    }
+    
+    .note-cell:hover {
+        background: #2a2a2a;
+    }
+    
+    .note-cell.active {
+        font-weight: 500;
+    }
+    
+    .note-cell.playing {
+        filter: brightness(1.8) !important;
+        box-shadow: 0 0 15px currentColor !important;
+        transform: scale(1.05);
+    }
+    
+    .note-cell.selected {
+        outline: 3px solid #00aaff;
+        outline-offset: -3px;
+    }
+    
+    .note-cell.paste-preview {
+        opacity: 0.6;
+        outline: 2px dashed #00ff00;
+        outline-offset: -2px;
+    }
+    
+    .note-cell.drag-preview {
+        opacity: 0.7;
+        outline: 2px dashed #ffaa00;
+        outline-offset: -2px;
+    }
+    
+    .tracker-row {
+        display: contents;
+    }
+    
+    .bottom-controls {
+        background: #242424;
+        border-top: 1px solid #2a2a2a;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        flex-shrink: 0;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .status-bar {
+        background: #1a1a1a;
+        border-top: 1px solid #2a2a2a;
+        padding: 8px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: #999;
+        flex-shrink: 0;
+    }
+    
+    #statusText {
+        font-weight: 500;
+    }
+    
+    #selectionCount {
+        color: #666;
+    }
+    
+    button.active {
+        background: #3a5a3a;
+        border-color: #4a7a4a;
+    }
+    
+    button#playBtn.active {
+        background: #3a4a5a;
+        border-color: #4a6a8a;
+    }
+    
+    button#eraseBtn.active {
+        background: #5a3a3a;
+        border-color: #7a4a4a;
+    }
+    
+    .left-controls, .right-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .icon-btn {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        font-size: 18px;
+        touch-action: manipulation;
+    }
+    
+    .instrument-list {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    
+    .inst-chip {
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        border: 1px solid;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        touch-action: manipulation;
+    }
+    
+    .inst-chip.selected {
+        border-width: 2px;
+    }
+    
+    .modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: #242424;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #2a2a2a;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-body {
+        padding: 24px;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #2a2a2a;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #999;
+        font-size: 13px;
+    }
+    
+    .form-group input, .form-group select {
+        width: 100%;
+    }
+    
+    input[type="range"] {
+        height: 6px;
+        padding: 0;
+    }
+    
+    .range-val {
+        text-align: center;
+        color: #e8e8e8;
+        margin-top: 4px;
+    }
+    
+    .color-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+    }
+    
+    .color-box {
+        aspect-ratio: 1;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    
+    .color-box.selected {
+        border-color: #e8e8e8;
+    }
+    
+    .note-popup {
+        position: fixed;
+        background: #242424;
+        border: 1px solid #2a2a2a;
+        border-radius: 6px;
+        display: none;
+        z-index: 900;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90vw;
+        max-height: 70vh;
+        flex-direction: column;
+    }
+    
+    .note-popup.active {
+        display: flex;
+    }
+    
+    .note-popup-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #2a2a2a;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .note-popup-header h3 {
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .close-btn {
+        background: none;
+        border: none;
+        color: #e8e8e8;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .close-btn:hover {
+        background: #3a3a3a;
+        border-radius: 4px;
+    }
+    
+    .note-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        padding: 16px;
+        max-height: 60vh;
+        overflow-y: auto;
+        min-width: 280px;
+    }
+    
+    .note-item {
+        padding: 16px;
+        text-align: center;
+        background: #1a1a1a;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+    }
+    
+    .note-item:hover {
+        background: #2a2a2a;
+    }
+    
+    .code-output {
+        background: #1a1a1a;
+        padding: 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        border: 1px solid #2a2a2a;
+        line-height: 1.6;
+    }
+    
+    .inst-list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #1a1a1a;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        border: 1px solid #2a2a2a;
+    }
+    
+    .inst-list-item:hover {
+        background: #2a2a2a;
+    }
+    
+    .inst-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .inst-actions button {
+        padding: 6px 12px;
+        min-height: 36px;
+    }
+</style>
+```
+
 </head>
-<html>
 <body>
-<p>&amp;lt;!DOCTYPE html&amp;gt;</p>
-<br/>
-<p>&amp;lt;html lang=“en”&amp;gt;</p>
-<p>&amp;lt;head&amp;gt;</p>
-<p>    &amp;lt;meta charset=“UTF-8”&amp;gt;</p>
-<p>    &amp;lt;meta name=“viewport” content=“width=device-width, initial-scale=1.0”&amp;gt;</p>
-<p>    &amp;lt;title&amp;gt;Chiptune Tracker&amp;lt;/title&amp;gt;</p>
-<p>    &amp;lt;style&amp;gt;</p>
-<p>        * {</p>
-<p>            margin: 0;</p>
-<p>            padding: 0;</p>
-<p>            box-sizing: border-box;</p>
-<p>        }</p>
-<br/>
-<p>```</p>
-<p>    body {</p>
-<p>        font-family: -apple-system, BlinkMacSystemFont, ‘Segoe UI’, system-ui, sans-serif;</p>
-<p>        background: #1a1a1a;</p>
-<p>        color: #e8e8e8;</p>
-<p>        overflow: hidden;</p>
-<p>        height: 100vh;</p>
-<p>        display: flex;</p>
-<p>        flex-direction: column;</p>
-<p>        touch-action: manipulation;</p>
-<p>        -webkit-tap-highlight-color: transparent;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .top-panel {</p>
-<p>        background: #242424;</p>
-<p>        border-bottom: 1px solid #2a2a2a;</p>
-<p>        padding: 12px 16px;</p>
-<p>        display: flex;</p>
-<p>        align-items: center;</p>
-<p>        justify-content: space-between;</p>
-<p>        flex-shrink: 0;</p>
-<p>        flex-wrap: wrap;</p>
-<p>        gap: 8px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .top-panel h1 {</p>
-<p>        font-size: 16px;</p>
-<p>        font-weight: 500;</p>
-<p>        flex: 1 1 auto;</p>
-<p>        min-width: 120px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .top-actions {</p>
-<p>        display: flex;</p>
-<p>        gap: 8px;</p>
-<p>        align-items: center;</p>
-<p>        flex-wrap: wrap;</p>
-<p>    }</p>
-<p>    </p>
-<p>    button {</p>
-<p>        background: #2a2a2a;</p>
-<p>        color: #e8e8e8;</p>
-<p>        border: 1px solid #3a3a3a;</p>
-<p>        padding: 10px 16px;</p>
-<p>        border-radius: 6px;</p>
-<p>        cursor: pointer;</p>
-<p>        font-size: 13px;</p>
-<p>        transition: all 0.15s;</p>
-<p>        min-height: 44px;</p>
-<p>        touch-action: manipulation;</p>
-<p>    }</p>
-<p>    </p>
-<p>    button:hover {</p>
-<p>        background: #333;</p>
-<p>    }</p>
-<p>    </p>
-<p>    button:active {</p>
-<p>        background: #3a3a3a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    input[type=“text”], input[type=“number”] {</p>
-<p>        background: #1a1a1a;</p>
-<p>        color: #e8e8e8;</p>
-<p>        border: 1px solid #3a3a3a;</p>
-<p>        padding: 10px 12px;</p>
-<p>        border-radius: 6px;</p>
-<p>        font-size: 13px;</p>
-<p>        min-height: 44px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .tracker-container {</p>
-<p>        flex: 1;</p>
-<p>        overflow: auto;</p>
-<p>        padding: 12px;</p>
-<p>        -webkit-overflow-scrolling: touch;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .tracker-grid {</p>
-<p>        display: grid;</p>
-<p>        grid-template-columns: 40px repeat(6, minmax(70px, 1fr));</p>
-<p>        gap: 3px;</p>
-<p>        font-size: 11px;</p>
-<p>        max-width: 1200px;</p>
-<p>        margin: 0 auto;</p>
-<p>        min-width: min-content;</p>
-<p>    }</p>
-<p>    </p>
-<p>    @media (max-width: 768px) {</p>
-<p>        .tracker-grid {</p>
-<p>            grid-template-columns: 30px repeat(6, minmax(50px, 1fr));</p>
-<p>            font-size: 9px;</p>
-<p>            gap: 2px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .header-cell {</p>
-<p>            padding: 8px 4px;</p>
-<p>            font-size: 10px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .step-number {</p>
-<p>            padding: 8px 4px;</p>
-<p>            font-size: 10px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .note-cell {</p>
-<p>            padding: 8px 4px;</p>
-<p>            font-size: 9px;</p>
-<p>            min-height: 40px;</p>
-<p>            min-width: 50px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .top-panel h1 {</p>
-<p>            font-size: 14px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        button {</p>
-<p>            padding: 8px 12px;</p>
-<p>            font-size: 12px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        input[type=“text”], input[type=“number”] {</p>
-<p>            padding: 8px 10px;</p>
-<p>            font-size: 12px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .icon-btn {</p>
-<p>            width: 40px;</p>
-<p>            height: 40px;</p>
-<p>            font-size: 16px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .inst-chip {</p>
-<p>            padding: 6px 10px;</p>
-<p>            font-size: 11px;</p>
-<p>            min-height: 40px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .modal-content {</p>
-<p>            width: 95%;</p>
-<p>            max-height: 90vh;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .modal-body {</p>
-<p>            padding: 16px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .note-grid {</p>
-<p>            grid-template-columns: repeat(3, 1fr);</p>
-<p>            padding: 12px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .note-item {</p>
-<p>            padding: 12px;</p>
-<p>            font-size: 13px;</p>
-<p>            min-height: 44px;</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    @media (max-width: 480px) {</p>
-<p>        .tracker-grid {</p>
-<p>            grid-template-columns: 25px repeat(6, minmax(45px, 1fr));</p>
-<p>            font-size: 8px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .top-panel {</p>
-<p>            padding: 8px 12px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .bottom-controls {</p>
-<p>            padding: 8px 12px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .note-grid {</p>
-<p>            grid-template-columns: repeat(2, 1fr);</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    @media (min-width: 1024px) {</p>
-<p>        .tracker-grid {</p>
-<p>            grid-template-columns: 50px repeat(6, minmax(90px, 1fr));</p>
-<p>            font-size: 12px;</p>
-<p>        }</p>
-<p>        </p>
-<p>        .note-cell {</p>
-<p>            min-width: 80px;</p>
-<p>            font-size: 11px;</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    .header-cell {</p>
-<p>        background: #242424;</p>
-<p>        padding: 12px;</p>
-<p>        text-align: center;</p>
-<p>        border-radius: 4px;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>        color: #999;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .step-number {</p>
-<p>        background: #242424;</p>
-<p>        padding: 12px 6px;</p>
-<p>        text-align: center;</p>
-<p>        border-radius: 4px;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>        color: #666;</p>
-<p>        min-height: 44px;</p>
-<p>        display: flex;</p>
-<p>        align-items: center;</p>
-<p>        justify-content: center;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .step-number.measure-start {</p>
-<p>        border-bottom: 3px solid #666;</p>
-<p>        font-weight: 600;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell {</p>
-<p>        background: #242424;</p>
-<p>        padding: 12px 6px;</p>
-<p>        text-align: center;</p>
-<p>        cursor: pointer;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>        border-radius: 4px;</p>
-<p>        min-height: 44px;</p>
-<p>        min-width: 60px;</p>
-<p>        color: #666;</p>
-<p>        font-size: 10px;</p>
-<p>        line-height: 1.3;</p>
-<p>        user-select: none;</p>
-<p>        -webkit-user-select: none;</p>
-<p>        transition: all 0.1s;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell:hover {</p>
-<p>        background: #2a2a2a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell.active {</p>
-<p>        font-weight: 500;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell.playing {</p>
-<p>        filter: brightness(1.8) !important;</p>
-<p>        box-shadow: 0 0 15px currentColor !important;</p>
-<p>        transform: scale(1.05);</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell.selected {</p>
-<p>        outline: 3px solid #00aaff;</p>
-<p>        outline-offset: -3px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell.paste-preview {</p>
-<p>        opacity: 0.6;</p>
-<p>        outline: 2px dashed #00ff00;</p>
-<p>        outline-offset: -2px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-cell.drag-preview {</p>
-<p>        opacity: 0.7;</p>
-<p>        outline: 2px dashed #ffaa00;</p>
-<p>        outline-offset: -2px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .tracker-row {</p>
-<p>        display: contents;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .bottom-controls {</p>
-<p>        background: #242424;</p>
-<p>        border-top: 1px solid #2a2a2a;</p>
-<p>        padding: 12px 16px;</p>
-<p>        display: flex;</p>
-<p>        justify-content: space-between;</p>
-<p>        flex-shrink: 0;</p>
-<p>        gap: 12px;</p>
-<p>        flex-wrap: wrap;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .status-bar {</p>
-<p>        background: #1a1a1a;</p>
-<p>        border-top: 1px solid #2a2a2a;</p>
-<p>        padding: 8px 16px;</p>
-<p>        display: flex;</p>
-<p>        justify-content: space-between;</p>
-<p>        align-items: center;</p>
-<p>        font-size: 12px;</p>
-<p>        color: #999;</p>
-<p>        flex-shrink: 0;</p>
-<p>    }</p>
-<p>    </p>
-<p>    #statusText {</p>
-<p>        font-weight: 500;</p>
-<p>    }</p>
-<p>    </p>
-<p>    #selectionCount {</p>
-<p>        color: #666;</p>
-<p>    }</p>
-<p>    </p>
-<p>    button.active {</p>
-<p>        background: #3a5a3a;</p>
-<p>        border-color: #4a7a4a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    button#playBtn.active {</p>
-<p>        background: #3a4a5a;</p>
-<p>        border-color: #4a6a8a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    button#eraseBtn.active {</p>
-<p>        background: #5a3a3a;</p>
-<p>        border-color: #7a4a4a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .left-controls, .right-controls {</p>
-<p>        display: flex;</p>
-<p>        gap: 8px;</p>
-<p>        align-items: center;</p>
-<p>        flex-wrap: wrap;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .icon-btn {</p>
-<p>        width: 44px;</p>
-<p>        height: 44px;</p>
-<p>        padding: 0;</p>
-<p>        font-size: 18px;</p>
-<p>        touch-action: manipulation;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .instrument-list {</p>
-<p>        display: flex;</p>
-<p>        gap: 6px;</p>
-<p>        flex-wrap: wrap;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .inst-chip {</p>
-<p>        padding: 8px 12px;</p>
-<p>        border-radius: 4px;</p>
-<p>        font-size: 12px;</p>
-<p>        cursor: pointer;</p>
-<p>        border: 1px solid;</p>
-<p>        min-height: 44px;</p>
-<p>        display: flex;</p>
-<p>        align-items: center;</p>
-<p>        touch-action: manipulation;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .inst-chip.selected {</p>
-<p>        border-width: 2px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .modal {</p>
-<p>        position: fixed;</p>
-<p>        inset: 0;</p>
-<p>        background: rgba(0,0,0,0.8);</p>
-<p>        display: none;</p>
-<p>        align-items: center;</p>
-<p>        justify-content: center;</p>
-<p>        z-index: 1000;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .modal.active {</p>
-<p>        display: flex;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .modal-content {</p>
-<p>        background: #242424;</p>
-<p>        border-radius: 8px;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>        width: 90%;</p>
-<p>        max-width: 600px;</p>
-<p>        max-height: 80vh;</p>
-<p>        display: flex;</p>
-<p>        flex-direction: column;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .modal-header {</p>
-<p>        padding: 20px 24px;</p>
-<p>        border-bottom: 1px solid #2a2a2a;</p>
-<p>        display: flex;</p>
-<p>        justify-content: space-between;</p>
-<p>        align-items: center;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .modal-body {</p>
-<p>        padding: 24px;</p>
-<p>        overflow-y: auto;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .modal-footer {</p>
-<p>        padding: 16px 24px;</p>
-<p>        border-top: 1px solid #2a2a2a;</p>
-<p>        display: flex;</p>
-<p>        justify-content: flex-end;</p>
-<p>        gap: 12px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .form-group {</p>
-<p>        margin-bottom: 20px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .form-group label {</p>
-<p>        display: block;</p>
-<p>        margin-bottom: 8px;</p>
-<p>        color: #999;</p>
-<p>        font-size: 13px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .form-group input, .form-group select {</p>
-<p>        width: 100%;</p>
-<p>    }</p>
-<p>    </p>
-<p>    input[type=“range”] {</p>
-<p>        height: 6px;</p>
-<p>        padding: 0;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .range-val {</p>
-<p>        text-align: center;</p>
-<p>        color: #e8e8e8;</p>
-<p>        margin-top: 4px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .color-grid {</p>
-<p>        display: grid;</p>
-<p>        grid-template-columns: repeat(5, 1fr);</p>
-<p>        gap: 8px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .color-box {</p>
-<p>        aspect-ratio: 1;</p>
-<p>        border-radius: 4px;</p>
-<p>        cursor: pointer;</p>
-<p>        border: 2px solid transparent;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .color-box.selected {</p>
-<p>        border-color: #e8e8e8;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-popup {</p>
-<p>        position: fixed;</p>
-<p>        background: #242424;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>        border-radius: 6px;</p>
-<p>        display: none;</p>
-<p>        z-index: 900;</p>
-<p>        box-shadow: 0 4px 12px rgba(0,0,0,0.5);</p>
-<p>        left: 50%;</p>
-<p>        top: 50%;</p>
-<p>        transform: translate(-50%, -50%);</p>
-<p>        max-width: 90vw;</p>
-<p>        max-height: 70vh;</p>
-<p>        flex-direction: column;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-popup.active {</p>
-<p>        display: flex;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-popup-header {</p>
-<p>        padding: 12px 16px;</p>
-<p>        border-bottom: 1px solid #2a2a2a;</p>
-<p>        display: flex;</p>
-<p>        justify-content: space-between;</p>
-<p>        align-items: center;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-popup-header h3 {</p>
-<p>        font-size: 14px;</p>
-<p>        font-weight: 500;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .close-btn {</p>
-<p>        background: none;</p>
-<p>        border: none;</p>
-<p>        color: #e8e8e8;</p>
-<p>        font-size: 24px;</p>
-<p>        cursor: pointer;</p>
-<p>        padding: 0;</p>
-<p>        width: 32px;</p>
-<p>        height: 32px;</p>
-<p>        min-height: 32px;</p>
-<p>        display: flex;</p>
-<p>        align-items: center;</p>
-<p>        justify-content: center;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .close-btn:hover {</p>
-<p>        background: #3a3a3a;</p>
-<p>        border-radius: 4px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-grid {</p>
-<p>        display: grid;</p>
-<p>        grid-template-columns: repeat(4, 1fr);</p>
-<p>        gap: 6px;</p>
-<p>        padding: 16px;</p>
-<p>        max-height: 60vh;</p>
-<p>        overflow-y: auto;</p>
-<p>        min-width: 280px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-item {</p>
-<p>        padding: 16px;</p>
-<p>        text-align: center;</p>
-<p>        background: #1a1a1a;</p>
-<p>        border-radius: 4px;</p>
-<p>        cursor: pointer;</p>
-<p>        font-size: 14px;</p>
-<p>        min-height: 48px;</p>
-<p>        display: flex;</p>
-<p>        align-items: center;</p>
-<p>        justify-content: center;</p>
-<p>        touch-action: manipulation;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .note-item:hover {</p>
-<p>        background: #2a2a2a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .code-output {</p>
-<p>        background: #1a1a1a;</p>
-<p>        padding: 16px;</p>
-<p>        border-radius: 6px;</p>
-<p>        font-size: 12px;</p>
-<p>        white-space: pre-wrap;</p>
-<p>        font-family: monospace;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>        line-height: 1.6;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .inst-list-item {</p>
-<p>        display: flex;</p>
-<p>        justify-content: space-between;</p>
-<p>        align-items: center;</p>
-<p>        padding: 12px;</p>
-<p>        background: #1a1a1a;</p>
-<p>        border-radius: 4px;</p>
-<p>        margin-bottom: 8px;</p>
-<p>        border: 1px solid #2a2a2a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .inst-list-item:hover {</p>
-<p>        background: #2a2a2a;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .inst-actions {</p>
-<p>        display: flex;</p>
-<p>        gap: 8px;</p>
-<p>    }</p>
-<p>    </p>
-<p>    .inst-actions button {</p>
-<p>        padding: 6px 12px;</p>
-<p>        min-height: 36px;</p>
-<p>    }</p>
-<p>&amp;lt;/style&amp;gt;</p>
-<p>```</p>
-<br/>
-<p>&amp;lt;/head&amp;gt;</p>
-<p>&amp;lt;body&amp;gt;</p>
-<p>    &amp;lt;div class=“top-panel”&amp;gt;</p>
-<p>        &amp;lt;div&amp;gt;</p>
-<p>            &amp;lt;h1&amp;gt;Unique’s Tracker for MakeCode&amp;lt;/h1&amp;gt;</p>
-<p>            &amp;lt;div style=“font-size: 11px; color: #999; margin-top: 2px;”&amp;gt;v1.2.0&amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“top-actions”&amp;gt;</p>
-<p>            &amp;lt;button id=“instMgrBtn”&amp;gt;Manage Instruments&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;label&amp;gt;Steps&amp;lt;/label&amp;gt;</p>
-<p>            &amp;lt;input type=“number” id=“stepCount” value=“16” min=“1” max=“256” style=“width:70px”&amp;gt;</p>
-<p>            &amp;lt;button id=“setStepsBtn”&amp;gt;Set&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;label&amp;gt;Beats/Measure&amp;lt;/label&amp;gt;</p>
-<p>            &amp;lt;input type=“number” id=“beatsPerMeasure” value=“4” min=“1” max=“16” style=“width:70px”&amp;gt;</p>
-<p>            &amp;lt;button id=“saveBtn”&amp;gt;Save&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;button id=“loadBtn”&amp;gt;Load&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;input type=“text” id=“songName” value=“mySong” style=“width:140px”&amp;gt;</p>
-<p>            &amp;lt;button id=“exportBtn”&amp;gt;Export&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<br/>
-<p>```</p>
-<p>&amp;lt;div class=“tracker-container”&amp;gt;</p>
-<p>    &amp;lt;div class=“tracker-grid” id=“grid”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“bottom-controls”&amp;gt;</p>
-<p>    &amp;lt;div class=“left-controls”&amp;gt;</p>
-<p>        &amp;lt;button id=“playBtn”&amp;gt;Play&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“stopBtn”&amp;gt;Stop&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“drawBtn”&amp;gt;Draw&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“selectBtn”&amp;gt;Select&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“eraseBtn”&amp;gt;Erase&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“copyBtn” disabled&amp;gt;Copy&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“pasteBtn” disabled&amp;gt;Paste&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“clearBtn”&amp;gt;Clear All&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“demoBtn”&amp;gt;Demo&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;button id=“shortcutBtn”&amp;gt;Shortcuts&amp;lt;/button&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;div class=“right-controls”&amp;gt;</p>
-<p>        &amp;lt;label&amp;gt;BPM&amp;lt;/label&amp;gt;</p>
-<p>        &amp;lt;input type=“number” id=“bpm” value=“120” min=“60” max=“240” style=“width:70px”&amp;gt;</p>
-<p>        &amp;lt;label&amp;gt;Note Length&amp;lt;/label&amp;gt;</p>
-<p>        &amp;lt;input type=“number” id=“noteLength” value=“1” min=“1” max=“16” style=“width:70px”&amp;gt;</p>
-<p>        &amp;lt;label&amp;gt;Instrument&amp;lt;/label&amp;gt;</p>
-<p>        &amp;lt;div class=“instrument-list” id=“instList”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;button class=“icon-btn” id=“noteBtn”&amp;gt;♪&amp;lt;/button&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“status-bar”&amp;gt;</p>
-<p>    &amp;lt;div id=“statusText”&amp;gt;Ready&amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;div id=“selectionCount”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“note-popup” id=“notePopup”&amp;gt;</p>
-<p>    &amp;lt;div class=“note-popup-header”&amp;gt;</p>
-<p>        &amp;lt;h3&amp;gt;Select Note&amp;lt;/h3&amp;gt;</p>
-<p>        &amp;lt;button class=“close-btn” onclick=“document.getElementById(‘notePopup’).classList.remove(‘active’)”&amp;gt;&amp;times;&amp;lt;/button&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;div class=“note-grid” id=“noteGrid”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“modal” id=“instMgrModal”&amp;gt;</p>
-<p>    &amp;lt;div class=“modal-content”&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-header”&amp;gt;</p>
-<p>            &amp;lt;h2&amp;gt;Manage Instruments&amp;lt;/h2&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘instMgrModal’)”&amp;gt;&amp;times;&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-body”&amp;gt;</p>
-<p>            &amp;lt;button onclick=“openInstEditor(null)” style=“width:100%; margin-bottom:16px”&amp;gt;+ Create New Instrument&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;div id=“instMgrList”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-footer”&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘instMgrModal’)”&amp;gt;Close&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“modal” id=“instModal”&amp;gt;</p>
-<p>    &amp;lt;div class=“modal-content”&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-header”&amp;gt;</p>
-<p>            &amp;lt;h2 id=“instModalTitle”&amp;gt;Instrument Editor&amp;lt;/h2&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘instModal’)”&amp;gt;&amp;times;&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-body”&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Name&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;input type=“text” id=“iName”&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Wave&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;select id=“iWave”&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Sine&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Square&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Sawtooth&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Triangle&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Noise&amp;lt;/option&amp;gt;</p>
-<p>                &amp;lt;/select&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Frequency Mode&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;select id=“iFreqMode”&amp;gt;</p>
-<p>                    &amp;lt;option value=“relative”&amp;gt;Relative (follows note pitch)&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option value=“fixed”&amp;gt;Fixed frequency&amp;lt;/option&amp;gt;</p>
-<p>                &amp;lt;/select&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group” id=“freqGroup”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Start Freq (Hz)&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;input type=“range” id=“iStart” min=“50” max=“2000” value=“440” oninput=“updateVal(‘start’)”&amp;gt;</p>
-<p>                &amp;lt;div class=“range-val” id=“startVal”&amp;gt;440&amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group” id=“freqEndGroup”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;End Freq (Hz)&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;input type=“range” id=“iEnd” min=“50” max=“2000” value=“440” oninput=“updateVal(‘end’)”&amp;gt;</p>
-<p>                &amp;lt;div class=“range-val” id=“endVal”&amp;gt;440&amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Start Volume (0-255)&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;input type=“range” id=“iStartVol” min=“0” max=“255” value=“255” oninput=“updateVal(‘startVol’)”&amp;gt;</p>
-<p>                &amp;lt;div class=“range-val” id=“startVolVal”&amp;gt;255&amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;End Volume (0-255)&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;input type=“range” id=“iEndVol” min=“0” max=“255” value=“0” oninput=“updateVal(‘endVol’)”&amp;gt;</p>
-<p>                &amp;lt;div class=“range-val” id=“endVolVal”&amp;gt;0&amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Effect&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;select id=“iEffect”&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;None&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Vibrato&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Tremolo&amp;lt;/option&amp;gt;</p>
-<p>                    &amp;lt;option&amp;gt;Warble&amp;lt;/option&amp;gt;</p>
-<p>                &amp;lt;/select&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“form-group”&amp;gt;</p>
-<p>                &amp;lt;label&amp;gt;Color&amp;lt;/label&amp;gt;</p>
-<p>                &amp;lt;div class=“color-grid” id=“colors”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;button onclick=“preview()” style=“width:100%”&amp;gt;Preview&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-footer”&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘instModal’)”&amp;gt;Cancel&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;button onclick=“saveInst()”&amp;gt;Save&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“modal” id=“exportModal”&amp;gt;</p>
-<p>    &amp;lt;div class=“modal-content” style=“max-width:800px”&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-header”&amp;gt;</p>
-<p>            &amp;lt;h2&amp;gt;Export Code&amp;lt;/h2&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘exportModal’)”&amp;gt;&amp;times;&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-body”&amp;gt;</p>
-<p>            &amp;lt;div style=“margin-bottom:16px;padding:12px;background:#1a1a1a;border-radius:6px;border:1px solid #2a2a2a;”&amp;gt;</p>
-<p>                &amp;lt;div style=“margin-bottom:12px;font-size:13px;color:#999;”&amp;gt;</p>
-<p>                    &amp;lt;strong&amp;gt;Quick Add to Extension:&amp;lt;/strong&amp;gt;&amp;lt;br&amp;gt;</p>
-<p>                    Paste your existing utmMusic extension code below and click “Merge” to automatically add this song.</p>
-<p>                &amp;lt;/div&amp;gt;</p>
-<p>                &amp;lt;textarea id=“existingExtension” placeholder=“Paste your existing main.ts content here...” style=“width:100%;height:120px;background:#242424;color:#e8e8e8;border:1px solid #3a3a3a;padding:12px;border-radius:4px;font-family:monospace;font-size:12px;resize:vertical;”&amp;gt;&amp;lt;/textarea&amp;gt;</p>
-<p>                &amp;lt;div style=“display:flex;gap:8px;margin-top:8px;”&amp;gt;</p>
-<p>                    &amp;lt;button onclick=“mergeExtension()” style=“flex:1;”&amp;gt;Merge Song Into Extension&amp;lt;/button&amp;gt;</p>
-<p>                    &amp;lt;button onclick=“document.getElementById(‘existingExtension’).value=‘’” style=“background:#3a2a2a;”&amp;gt;Clear&amp;lt;/button&amp;gt;</p>
-<p>                &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div style=“margin-bottom:8px;font-size:13px;color:#999;”&amp;gt;</p>
-<p>                Manual instructions (if not using auto-merge):</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>            &amp;lt;div class=“code-output” id=“code”&amp;gt;&amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-footer”&amp;gt;</p>
-<p>            &amp;lt;button onclick=“copyCode()”&amp;gt;Copy Instructions&amp;lt;/button&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘exportModal’)”&amp;gt;Close&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;div class=“modal” id=“shortcutModal”&amp;gt;</p>
-<p>    &amp;lt;div class=“modal-content”&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-header”&amp;gt;</p>
-<p>            &amp;lt;h2&amp;gt;Keyboard Shortcuts&amp;lt;/h2&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘shortcutModal’)”&amp;gt;&amp;times;&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-body”&amp;gt;</p>
-<p>            &amp;lt;div style=“display:grid;grid-template-columns:auto 1fr;gap:12px 24px;font-size:13px;”&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Space&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Play/Stop&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;S&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Select Mode&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;E&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Erase Mode&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;D&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Draw Mode&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Ctrl/Cmd + C&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Copy Selection&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Ctrl/Cmd + V&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Paste (drag to position)&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Ctrl/Cmd + X&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Cut Selection&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Delete&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Clear Selection&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Escape&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Cancel Paste / Clear Selection&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Enter&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Confirm Paste&amp;lt;/span&amp;gt;</p>
-<p>                &amp;lt;strong&amp;gt;Mouse Drag&amp;lt;/strong&amp;gt;&amp;lt;span&amp;gt;Move Selection / Paste Preview&amp;lt;/span&amp;gt;</p>
-<p>            &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>        &amp;lt;div class=“modal-footer”&amp;gt;</p>
-<p>            &amp;lt;button onclick=“closeModal(‘shortcutModal’)”&amp;gt;Close&amp;lt;/button&amp;gt;</p>
-<p>        &amp;lt;/div&amp;gt;</p>
-<p>    &amp;lt;/div&amp;gt;</p>
-<p>&amp;lt;/div&amp;gt;</p>
-<br/>
-<p>&amp;lt;script&amp;gt;</p>
-<p>    const ctx = new AudioContext();</p>
-<p>    const CHANNELS = 6;</p>
-<p>    let ROWS = 16;</p>
-<p>    let beatsPerMeasure = 4;</p>
-<p>    </p>
-<p>    // Initialize pattern properly without using fill</p>
-<p>    let pattern = [];</p>
-<p>    for (let i = 0; i &amp;lt; ROWS; i++) {</p>
-<p>        pattern.push([null, null, null, null, null, null]);</p>
-<p>    }</p>
-<p>    </p>
-<p>    let playing = false, row = 0, timer = null, oscs = [];</p>
-<p>    let selInst = ‘square’, selNote = ‘C4’;</p>
-<p>    let noteMode = ‘piano’;</p>
-<p>    let eraseMode = false;</p>
-<p>    let selectMode = false;</p>
-<p>    let drawMode = true;</p>
-<p>    let editingInstId = null;</p>
-<p>    let playingCells = [];</p>
-<p>    let selNoteLength = 1;</p>
-<p>    let selectedCells = new Set();</p>
-<p>    let copiedNotes = [];</p>
-<p>    let pasteMode = false;</p>
-<p>    let pasteOffset = {row: 0, col: 0};</p>
-<p>    let pastePreviewCells = [];</p>
-<p>    let dragStart = null;</p>
-<p>    let isDraggingNotes = false;</p>
-<p>    let draggedNotes = [];</p>
-<p>    let dragOrigin = null;</p>
-<p>    let copiedOrigin = null;</p>
-<p>    </p>
-<p>    const notes = {</p>
-<p>        ‘C4’:262,’C#4’:277,’D4’:294,’D#4’:311,’E4’:330,’F4’:349,’F#4’:370,’G4’:392,’G#4’:415,’A4’:440,’A#4’:466,’B4’:494,</p>
-<p>        ‘C5’:523,’C#5’:554,’D5’:587,’D#5’:622,’E5’:659,’F5’:698,’F#5’:740,’G5’:784,’G#5’:831,’A5’:880,’A#5’:932,’B5’:988,</p>
-<p>        ‘C3’:131,’C#3’:139,’D3’:147,’D#3’:156,’E3’:165,’F3’:175,’F#3’:185,’G3’:196,’G#3’:208,’A3’:220,’A#3’:233,’B3’:247,</p>
-<p>        ‘C6’:1047,’C#6’:1109,’D6’:1175,’D#6’:1245,’E6’:1319,’F6’:1397,’F#6’:1480,’G6’:1568,’G#6’:1661,’A6’:1760,’A#6’:1865,’B6’:1976,</p>
-<p>        ‘C2’:65,’C#2’:69,’D2’:73,’D#2’:78,’E2’:82,’F2’:87,’F#2’:92,’G2’:98,’G#2’:104,’A2’:110,’A#2’:117,’B2’:123,</p>
-<p>        ‘C1’:33,’C#1’:35,’D1’:37,’D#1’:39,’E1’:41,’F1’:44,’F#1’:46,’G1’:49,’G#1’:52,’A1’:55,’A#1’:58,’B1’:62</p>
-<p>    };</p>
-<p>    </p>
-<p>    const freqOptions = [100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1200,1500,2000];</p>
-<p>    </p>
-<p>    let insts = {</p>
-<p>        sine:{name:’Sine’,wave:’sine’,color:’#1a3a4a’,text:’#6ab4d4’,freqMode:’relative’},</p>
-<p>        square:{name:’Square’,wave:’square’,color:’#3a2a4a’,text:’#b47ad4’,freqMode:’relative’},</p>
-<p>        sawtooth:{name:’Saw’,wave:’sawtooth’,color:’#4a3a2a’,text:’#d49a6a’,freqMode:’relative’},</p>
-<p>        triangle:{name:’Tri’,wave:’triangle’,color:’#2a4a3a’,text:’#7ad4a4’,freqMode:’relative’},</p>
-<p>        noise:{name:’Noise’,wave:’noise’,color:’#3a3a3a’,text:’#aaa’,freqMode:’relative’}</p>
-<p>    };</p>
-<p>    </p>
-<p>    const colors = [‘#1a3a4a’,’#3a2a4a’,’#4a3a2a’,’#2a4a3a’,’#3a3a3a’,’#4a1a2a’,’#2a1a4a’,’#1a4a4a’,’#4a4a1a’,’#2a4a1a’];</p>
-<p>    </p>
-<p>    function updateVal(t) {</p>
-<p>        const map = {start:’iStart’,end:’iEnd’,startVol:’iStartVol’,endVol:’iEndVol’};</p>
-<p>        document.getElementById(t+’Val’).textContent = document.getElementById(map[t]).value;</p>
-<p>    }</p>
-<p>    </p>
-<p>    function initInsts() {</p>
-<p>        const list = document.getElementById(‘instList’);</p>
-<p>        list.innerHTML = ‘’;</p>
-<p>        Object.keys(insts).forEach(k =&amp;gt; {</p>
-<p>            const i = insts[k];</p>
-<p>            const c = document.createElement(‘div’);</p>
-<p>            c.className = ‘inst-chip’+(selInst===k?’ selected’:’’);</p>
-<p>            c.textContent = i.name;</p>
-<p>            c.style.backgroundColor = i.color;</p>
-<p>            c.style.borderColor = i.text;</p>
-<p>            c.style.color = i.text;</p>
-<p>            c.onclick = () =&amp;gt; { selInst = k; initInsts(); };</p>
-<p>            list.appendChild(c);</p>
-<p>        });</p>
-<p>    }</p>
-<p>    </p>
-<p>    function initInstMgr() {</p>
-<p>        const list = document.getElementById(‘instMgrList’);</p>
-<p>        list.innerHTML = ‘’;</p>
-<p>        Object.keys(insts).forEach(k =&amp;gt; {</p>
-<p>            const i = insts[k];</p>
-<p>            const item = document.createElement(‘div’);</p>
-<p>            item.className = ‘inst-list-item’;</p>
-<p>            item.style.borderLeft = `4px solid ${i.color}`;</p>
-<p>            </p>
-<p>            const info = document.createElement(‘div’);</p>
-<p>            info.innerHTML = `&amp;lt;strong&amp;gt;${i.name}&amp;lt;/strong&amp;gt;&amp;lt;br&amp;gt;&amp;lt;small&amp;gt;${i.wave} | ${i.effect || ‘No effect’} | ${i.freqMode || ‘relative’}&amp;lt;/small&amp;gt;`;</p>
-<p>            </p>
-<p>            const actions = document.createElement(‘div’);</p>
-<p>            actions.className = ‘inst-actions’;</p>
-<p>            </p>
-<p>            const editBtn = document.createElement(‘button’);</p>
-<p>            editBtn.textContent = ‘Edit’;</p>
-<p>            editBtn.onclick = () =&amp;gt; openInstEditor(k);</p>
-<p>            </p>
-<p>            actions.appendChild(editBtn);</p>
-<p>            </p>
-<p>            if (i.custom) {</p>
-<p>                const delBtn = document.createElement(‘button’);</p>
-<p>                delBtn.textContent = ‘Delete’;</p>
-<p>                delBtn.style.background = ‘#4a2a2a’;</p>
-<p>                delBtn.onclick = () =&amp;gt; deleteInst(k);</p>
-<p>                actions.appendChild(delBtn);</p>
-<p>            }</p>
-<p>            </p>
-<p>            item.appendChild(info);</p>
-<p>            item.appendChild(actions);</p>
-<p>            list.appendChild(item);</p>
-<p>        });</p>
-<p>    }</p>
-<p>    </p>
-<p>    function openInstEditor(id) {</p>
-<p>        editingInstId = id;</p>
-<p>        const isEdit = id !== null;</p>
-<p>        document.getElementById(‘instModalTitle’).textContent = isEdit ? ‘Edit Instrument’ : ‘Create Instrument’;</p>
-<p>        </p>
-<p>        if (isEdit) {</p>
-<p>            const inst = insts[id];</p>
-<p>            document.getElementById(‘iName’).value = inst.name;</p>
-<p>            document.getElementById(‘iWave’).value = inst.wave.charAt(0).toUpperCase() + inst.wave.slice(1);</p>
-<p>            document.getElementById(‘iFreqMode’).value = inst.freqMode || ‘relative’;</p>
-<p>            document.getElementById(‘iStart’).value = inst.startFreq || 440;</p>
-<p>            document.getElementById(‘iEnd’).value = inst.endFreq || 440;</p>
-<p>            document.getElementById(‘iStartVol’).value = inst.startVol !== undefined ? inst.startVol : 255;</p>
-<p>            document.getElementById(‘iEndVol’).value = inst.endVol !== undefined ? inst.endVol : 0;</p>
-<p>            document.getElementById(‘iEffect’).value = inst.effect || ‘None’;</p>
-<p>            updateVal(‘start’);</p>
-<p>            updateVal(‘end’);</p>
-<p>            updateVal(‘startVol’);</p>
-<p>            updateVal(‘endVol’);</p>
-<p>        } else {</p>
-<p>            document.getElementById(‘iName’).value = ‘’;</p>
-<p>            document.getElementById(‘iWave’).value = ‘Square’;</p>
-<p>            document.getElementById(‘iFreqMode’).value = ‘relative’;</p>
-<p>            document.getElementById(‘iStart’).value = 440;</p>
-<p>            document.getElementById(‘iEnd’).value = 440;</p>
-<p>            document.getElementById(‘iStartVol’).value = 255;</p>
-<p>            document.getElementById(‘iEndVol’).value = 0;</p>
-<p>            document.getElementById(‘iEffect’).value = ‘None’;</p>
-<p>            updateVal(‘start’);</p>
-<p>            updateVal(‘end’);</p>
-<p>            updateVal(‘startVol’);</p>
-<p>            updateVal(‘endVol’);</p>
-<p>        }</p>
-<p>        </p>
-<p>        updateFreqGroups();</p>
-<p>        closeModal(‘instMgrModal’);</p>
-<p>        openModal(‘instModal’);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function updateFreqGroups() {</p>
-<p>        const mode = document.getElementById(‘iFreqMode’).value;</p>
-<p>        document.getElementById(‘freqGroup’).style.display = mode === ‘fixed’ ? ‘block’ : ‘none’;</p>
-<p>        document.getElementById(‘freqEndGroup’).style.display = mode === ‘fixed’ ? ‘block’ : ‘none’;</p>
-<p>    }</p>
-<p>    </p>
-<p>    document.getElementById(‘iFreqMode’).addEventListener(‘change’, updateFreqGroups);</p>
-<p>    </p>
-<p>    function deleteInst(id) {</p>
-<p>        if (!confirm(‘Delete this instrument?’)) return;</p>
-<p>        delete insts[id];</p>
-<p>        if (selInst === id) selInst = ‘square’;</p>
-<p>        pattern.forEach(row =&amp;gt; row.forEach((cell, i) =&amp;gt; {</p>
-<p>            if (cell &amp;&amp; cell.inst === id) row[i] = null;</p>
-<p>        }));</p>
-<p>        initInstMgr();</p>
-<p>        initInsts();</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function setSteps() {</p>
-<p>        const newRows = parseInt(document.getElementById(‘stepCount’).value);</p>
-<p>        </p>
-<p>        if (isNaN(newRows) || newRows &amp;lt; 1 || newRows &amp;gt; 256) {</p>
-<p>            alert(‘Steps must be between 1 and 256’);</p>
-<p>            document.getElementById(‘stepCount’).value = ROWS;</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        if (newRows === ROWS) {</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Create entirely new array</p>
-<p>        const newPattern = [];</p>
-<p>        for (let i = 0; i &amp;lt; newRows; i++) {</p>
-<p>            newPattern.push([null, null, null, null, null, null]);</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Copy over existing data</p>
-<p>        for (let i = 0; i &amp;lt; Math.min(ROWS, newRows); i++) {</p>
-<p>            for (let j = 0; j &amp;lt; CHANNELS; j++) {</p>
-<p>                newPattern[i][j] = pattern[i][j];</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        pattern = newPattern;</p>
-<p>        ROWS = newRows;</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function initGrid() {</p>
-<p>        const g = document.getElementById(‘grid’);</p>
-<p>        g.innerHTML = ‘&amp;lt;div class=“header-cell”&amp;gt;Step&amp;lt;/div&amp;gt;’;</p>
-<p>        for (let i = 1; i &amp;lt;= CHANNELS; i++) {</p>
-<p>            g.innerHTML += `&amp;lt;div class=“header-cell”&amp;gt;CH${i}&amp;lt;/div&amp;gt;`;</p>
-<p>        }</p>
-<p>        </p>
-<p>        for (let r = 0; r &amp;lt; ROWS; r++) {</p>
-<p>            const s = document.createElement(‘div’);</p>
-<p>            s.className = ‘step-number’;</p>
-<p>            if (r % beatsPerMeasure === 0) {</p>
-<p>                s.classList.add(‘measure-start’);</p>
-<p>            }</p>
-<p>            s.textContent = (r+1).toString().padStart(2,’0’);</p>
-<p>            g.appendChild(s);</p>
-<p>            </p>
-<p>            for (let c = 0; c &amp;lt; CHANNELS; c++) {</p>
-<p>                const cell = document.createElement(‘div’);</p>
-<p>                cell.className = ‘note-cell’;</p>
-<p>                cell.dataset.row = r;</p>
-<p>                cell.dataset.col = c;</p>
-<p>                const n = pattern[r][c];</p>
-<p>                if (n) {</p>
-<p>                    const i = insts[n.inst] || insts[‘square’];</p>
-<p>                    const noteDisplay = typeof n.note === ‘number’ ? n.note+’Hz’ : n.note;</p>
-<p>                    const lengthDisplay = n.length &amp;gt; 1 ? ` (${n.length})` : ‘’;</p>
-<p>                    cell.textContent = noteDisplay+lengthDisplay+’\n’+i.name;</p>
-<p>                    cell.classList.add(‘active’);</p>
-<p>                    cell.style.backgroundColor = i.color;</p>
-<p>                    cell.style.borderColor = i.text;</p>
-<p>                    cell.style.color = i.text;</p>
-<p>                } else {</p>
-<p>                    cell.textContent = ‘—‘;</p>
-<p>                }</p>
-<p>                </p>
-<p>                cell.onmousedown = (e) =&amp;gt; handleCellMouseDown(e, r, c);</p>
-<p>                cell.onmouseenter = (e) =&amp;gt; handleCellMouseEnter(e, r, c);</p>
-<p>                cell.onmouseup = () =&amp;gt; handleCellMouseUp();</p>
-<p>                </p>
-<p>                g.appendChild(cell);</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        // If in paste mode, update the preview</p>
-<p>        if (pasteMode) {</p>
-<p>            updatePastePreview();</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function handleCellMouseDown(e, r, c) {</p>
-<p>        const key = `${r},${c}`;</p>
-<p>        </p>
-<p>        // Paste mode doesn’t respond to clicks</p>
-<p>        if (pasteMode) {</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        if (selectMode) {</p>
-<p>            // If clicking on an already selected cell, start dragging those notes</p>
-<p>            if (selectedCells.has(key)) {</p>
-<p>                isDraggingNotes = true;</p>
-<p>                dragOrigin = {row: r, col: c};</p>
-<p>                </p>
-<p>                // Store the selected notes for dragging</p>
-<p>                draggedNotes = Array.from(selectedCells).map(cellKey =&amp;gt; {</p>
-<p>                    const [row, col] = cellKey.split(‘,’).map(Number);</p>
-<p>                    return {</p>
-<p>                        row: row,</p>
-<p>                        col: col,</p>
-<p>                        note: pattern[row][col] ? {...pattern[row][col]} : null</p>
-<p>                    };</p>
-<p>                }).filter(n =&amp;gt; n.note);</p>
-<p>                </p>
-<p>                // Calculate relative positions</p>
-<p>                const minRow = Math.min(...draggedNotes.map(n =&amp;gt; n.row));</p>
-<p>                const minCol = Math.min(...draggedNotes.map(n =&amp;gt; n.col));</p>
-<p>                draggedNotes = draggedNotes.map(n =&amp;gt; ({</p>
-<p>                    ...n,</p>
-<p>                    relRow: n.row - minRow,</p>
-<p>                    relCol: n.col - minCol</p>
-<p>                }));</p>
-<p>            } else {</p>
-<p>                // Starting a new selection</p>
-<p>                if (!e.shiftKey &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {</p>
-<p>                    selectedCells.clear();</p>
-<p>                }</p>
-<p>                dragStart = {row: r, col: c};</p>
-<p>                if (selectedCells.has(key)) {</p>
-<p>                    selectedCells.delete(key);</p>
-<p>                } else {</p>
-<p>                    selectedCells.add(key);</p>
-<p>                }</p>
-<p>                updateSelection();</p>
-<p>            }</p>
-<p>        } else if (eraseMode) {</p>
-<p>            pattern[r][c] = null;</p>
-<p>            initGrid();</p>
-<p>        } else if (selNote &amp;&amp; selInst) {</p>
-<p>            pattern[r][c] = {note:selNote,inst:selInst,length:selNoteLength};</p>
-<p>            const i = insts[selInst];</p>
-<p>            const baseFreq = typeof selNote === ‘number’ ? selNote : notes[selNote];</p>
-<p>            playNotePreview(baseFreq, i);</p>
-<p>            initGrid();</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function handleCellMouseEnter(e, r, c) {</p>
-<p>        // In paste mode, just update position on hover (no buttons needed)</p>
-<p>        if (pasteMode) {</p>
-<p>            pasteOffset = {row: r, col: c};</p>
-<p>            updatePastePreview();</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        if (isDraggingNotes &amp;&amp; e.buttons === 1 &amp;&amp; !pasteMode) {</p>
-<p>            // Update drag preview</p>
-<p>            updateDragPreview(r, c);</p>
-<p>        } else if (dragStart &amp;&amp; selectMode &amp;&amp; e.buttons === 1 &amp;&amp; !isDraggingNotes) {</p>
-<p>            // Normal selection box drag</p>
-<p>            const minR = Math.min(dragStart.row, r);</p>
-<p>            const maxR = Math.max(dragStart.row, r);</p>
-<p>            const minC = Math.min(dragStart.col, c);</p>
-<p>            const maxC = Math.max(dragStart.col, c);</p>
-<p>            </p>
-<p>            selectedCells.clear();</p>
-<p>            for (let i = minR; i &amp;lt;= maxR; i++) {</p>
-<p>                for (let j = minC; j &amp;lt;= maxC; j++) {</p>
-<p>                    selectedCells.add(`${i},${j}`);</p>
-<p>                }</p>
-<p>            }</p>
-<p>            updateSelection();</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function handleCellMouseUp() {</p>
-<p>        if (isDraggingNotes &amp;&amp; !pasteMode) {</p>
-<p>            // Place the dragged notes</p>
-<p>            placeDraggedNotes();</p>
-<p>        }</p>
-<p>        dragStart = null;</p>
-<p>        if (!pasteMode) {</p>
-<p>            isDraggingNotes = false;</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function updateDragPreview(targetRow, targetCol) {</p>
-<p>        // Clear previous preview</p>
-<p>        document.querySelectorAll(‘.note-cell’).forEach(cell =&amp;gt; {</p>
-<p>            cell.classList.remove(‘drag-preview’);</p>
-<p>        });</p>
-<p>        </p>
-<p>        // Show new preview</p>
-<p>        draggedNotes.forEach(({relRow, relCol}) =&amp;gt; {</p>
-<p>            const newRow = targetRow + relRow;</p>
-<p>            const newCol = targetCol + relCol;</p>
-<p>            if (newRow &amp;gt;= 0 &amp;&amp; newRow &amp;lt; ROWS &amp;&amp; newCol &amp;gt;= 0 &amp;&amp; newCol &amp;lt; CHANNELS) {</p>
-<p>                const cell = document.querySelector(`.note-cell[data-row=“${newRow}”][data-col=“${newCol}”]`);</p>
-<p>                if (cell) {</p>
-<p>                    cell.classList.add(‘drag-preview’);</p>
-<p>                }</p>
-<p>            }</p>
-<p>        });</p>
-<p>    }</p>
-<p>    </p>
-<p>    function placeDraggedNotes() {</p>
-<p>        // Find the current position from the drag preview</p>
-<p>        const previewCells = document.querySelectorAll(‘.note-cell.drag-preview’);</p>
-<p>        if (previewCells.length === 0) return;</p>
-<p>        </p>
-<p>        // Get the target position from first preview cell</p>
-<p>        const firstPreview = previewCells[0];</p>
-<p>        const targetRow = parseInt(firstPreview.dataset.row);</p>
-<p>        const targetCol = parseInt(firstPreview.dataset.col);</p>
-<p>        </p>
-<p>        // Clear original positions</p>
-<p>        draggedNotes.forEach(({row, col}) =&amp;gt; {</p>
-<p>            pattern[row][col] = null;</p>
-<p>        });</p>
-<p>        </p>
-<p>        // Place notes at new positions</p>
-<p>        draggedNotes.forEach(({note, relRow, relCol}) =&amp;gt; {</p>
-<p>            const newRow = targetRow + relRow;</p>
-<p>            const newCol = targetCol + relCol;</p>
-<p>            if (newRow &amp;gt;= 0 &amp;&amp; newRow &amp;lt; ROWS &amp;&amp; newCol &amp;gt;= 0 &amp;&amp; newCol &amp;lt; CHANNELS) {</p>
-<p>                pattern[newRow][newCol] = note ? {...note} : null;</p>
-<p>            }</p>
-<p>        });</p>
-<p>        </p>
-<p>        // Update selection to new positions</p>
-<p>        selectedCells.clear();</p>
-<p>        draggedNotes.forEach(({relRow, relCol}) =&amp;gt; {</p>
-<p>            const newRow = targetRow + relRow;</p>
-<p>            const newCol = targetCol + relCol;</p>
-<p>            if (newRow &amp;gt;= 0 &amp;&amp; newRow &amp;lt; ROWS &amp;&amp; newCol &amp;gt;= 0 &amp;&amp; newCol &amp;lt; CHANNELS) {</p>
-<p>                selectedCells.add(`${newRow},${newCol}`);</p>
-<p>            }</p>
-<p>        });</p>
-<p>        </p>
-<p>        draggedNotes = [];</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function updateSelection() {</p>
-<p>        document.querySelectorAll(‘.note-cell’).forEach(cell =&amp;gt; {</p>
-<p>            const key = `${cell.dataset.row},${cell.dataset.col}`;</p>
-<p>            if (selectedCells.has(key)) {</p>
-<p>                cell.classList.add(‘selected’);</p>
-<p>            } else {</p>
-<p>                cell.classList.remove(‘selected’);</p>
-<p>            }</p>
-<p>        });</p>
-<p>        document.getElementById(‘copyBtn’).disabled = selectedCells.size === 0;</p>
-<p>        updateStatusBar();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function updateStatusBar() {</p>
-<p>        const statusText = document.getElementById(‘statusText’);</p>
-<p>        const selectionCount = document.getElementById(‘selectionCount’);</p>
-<p>        </p>
-<p>        if (playing) {</p>
-<p>            statusText.textContent = ‘Playing’;</p>
-<p>        } else if (pasteMode) {</p>
-<p>            statusText.textContent = ‘Pasting (enter to place notes)’;</p>
-<p>        } else if (isDraggingNotes) {</p>
-<p>            statusText.textContent = ‘Dragging’;</p>
-<p>        } else if (selectMode) {</p>
-<p>            statusText.textContent = ‘Selecting’;</p>
-<p>        } else if (eraseMode) {</p>
-<p>            statusText.textContent = ‘Erasing’;</p>
-<p>        } else if (drawMode) {</p>
-<p>            statusText.textContent = ‘Drawing’;</p>
-<p>        } else {</p>
-<p>            statusText.textContent = ‘Ready’;</p>
-<p>        }</p>
-<p>        </p>
-<p>        if (selectedCells.size &amp;gt; 0) {</p>
-<p>            selectionCount.textContent = `${selectedCells.size} note${selectedCells.size === 1 ? ‘’ : ‘s’} selected`;</p>
-<p>        } else {</p>
-<p>            selectionCount.textContent = ‘’;</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function copySelection() {</p>
-<p>        if (selectedCells.size === 0) return;</p>
-<p>        </p>
-<p>        const cells = Array.from(selectedCells).map(key =&amp;gt; {</p>
-<p>            const [r, c] = key.split(‘,’).map(Number);</p>
-<p>            return {row: r, col: c, note: pattern[r][c]};</p>
-<p>        });</p>
-<p>        </p>
-<p>        const minRow = Math.min(...cells.map(c =&amp;gt; c.row));</p>
-<p>        const minCol = Math.min(...cells.map(c =&amp;gt; c.col));</p>
-<p>        </p>
-<p>        copiedOrigin = {row: minRow, col: minCol};</p>
-<p>        </p>
-<p>        copiedNotes = cells.map(c =&amp;gt; ({</p>
-<p>            row: c.row - minRow,</p>
-<p>            col: c.col - minCol,</p>
-<p>            note: c.note ? JSON.parse(JSON.stringify(c.note)) : null</p>
-<p>        })).filter(c =&amp;gt; c.note);</p>
-<p>        </p>
-<p>        document.getElementById(‘pasteBtn’).disabled = false;</p>
-<p>        updateStatusBar();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function cutSelection() {</p>
-<p>        copySelection();</p>
-<p>        selectedCells.forEach(key =&amp;gt; {</p>
-<p>            const [r, c] = key.split(‘,’).map(Number);</p>
-<p>            pattern[r][c] = null;</p>
-<p>        });</p>
-<p>        selectedCells.clear();</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function deleteSelection() {</p>
-<p>        selectedCells.forEach(key =&amp;gt; {</p>
-<p>            const [r, c] = key.split(‘,’).map(Number);</p>
-<p>            pattern[r][c] = null;</p>
-<p>        });</p>
-<p>        selectedCells.clear();</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function startPaste() {</p>
-<p>        if (copiedNotes.length === 0) return;</p>
-<p>        </p>
-<p>        selectMode = true;</p>
-<p>        drawMode = false;</p>
-<p>        eraseMode = false;</p>
-<p>        pasteMode = true;</p>
-<p>        </p>
-<p>        if (copiedOrigin) {</p>
-<p>            pasteOffset = {row: copiedOrigin.row, col: copiedOrigin.col};</p>
-<p>        } else {</p>
-<p>            pasteOffset = {row: 0, col: 0};</p>
-<p>        }</p>
-<p>        </p>
-<p>        selectedCells.clear();</p>
-<p>        updateModeButtons();</p>
-<p>        updateSelection();</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function updatePastePreview() {</p>
-<p>        // Clear previous preview</p>
-<p>        document.querySelectorAll(‘.note-cell’).forEach(cell =&amp;gt; {</p>
-<p>            cell.classList.remove(‘paste-preview’);</p>
-<p>        });</p>
-<p>        </p>
-<p>        if (!pasteMode) return;</p>
-<p>        </p>
-<p>        // Store preview cells for later</p>
-<p>        pastePreviewCells = [];</p>
-<p>        </p>
-<p>        copiedNotes.forEach(({row, col, note}) =&amp;gt; {</p>
-<p>            const targetRow = row + pasteOffset.row;</p>
-<p>            const targetCol = col + pasteOffset.col;</p>
-<p>            if (targetRow &amp;gt;= 0 &amp;&amp; targetRow &amp;lt; ROWS &amp;&amp; targetCol &amp;gt;= 0 &amp;&amp; targetCol &amp;lt; CHANNELS) {</p>
-<p>                const cell = document.querySelector(`.note-cell[data-row=“${targetRow}”][data-col=“${targetCol}”]`);</p>
-<p>                if (cell &amp;&amp; note) {</p>
-<p>                    cell.classList.add(‘paste-preview’);</p>
-<p>                    // Don’t show note content, just green dotted outline</p>
-<p>                    pastePreviewCells.push({row: targetRow, col: targetCol, note: {...note}});</p>
-<p>                }</p>
-<p>            }</p>
-<p>        });</p>
-<p>    }</p>
-<p>    </p>
-<p>    function movePaste(dr, dc) {</p>
-<p>        if (!pasteMode) return;</p>
-<p>        pasteOffset.row += dr;</p>
-<p>        pasteOffset.col += dc;</p>
-<p>        </p>
-<p>        pasteOffset.row = Math.max(0, Math.min(ROWS - 1, pasteOffset.row));</p>
-<p>        pasteOffset.col = Math.max(0, Math.min(CHANNELS - 1, pasteOffset.col));</p>
-<p>        </p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function placePastedNotes() {</p>
-<p>        if (!pasteMode) return;</p>
-<p>        </p>
-<p>        copiedNotes.forEach(({row, col, note}) =&amp;gt; {</p>
-<p>            const targetRow = row + pasteOffset.row;</p>
-<p>            const targetCol = col + pasteOffset.col;</p>
-<p>            if (targetRow &amp;gt;= 0 &amp;&amp; targetRow &amp;lt; ROWS &amp;&amp; targetCol &amp;gt;= 0 &amp;&amp; targetCol &amp;lt; CHANNELS &amp;&amp; note) {</p>
-<p>                pattern[targetRow][targetCol] = JSON.parse(JSON.stringify(note));</p>
-<p>            }</p>
-<p>        });</p>
-<p>        </p>
-<p>        selectedCells.clear();</p>
-<p>        copiedNotes.forEach(({row, col}) =&amp;gt; {</p>
-<p>            const targetRow = row + pasteOffset.row;</p>
-<p>            const targetCol = col + pasteOffset.col;</p>
-<p>            if (targetRow &amp;gt;= 0 &amp;&amp; targetRow &amp;lt; ROWS &amp;&amp; targetCol &amp;gt;= 0 &amp;&amp; targetCol &amp;lt; CHANNELS) {</p>
-<p>                selectedCells.add(`${targetRow},${targetCol}`);</p>
-<p>            }</p>
-<p>        });</p>
-<p>        </p>
-<p>        pasteMode = false;</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function cancelPaste() {</p>
-<p>        pasteMode = false;</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function updateModeButtons() {</p>
-<p>        document.getElementById(‘drawBtn’).classList.toggle(‘active’, drawMode);</p>
-<p>        document.getElementById(‘selectBtn’).classList.toggle(‘active’, selectMode);</p>
-<p>        document.getElementById(‘eraseBtn’).classList.toggle(‘active’, eraseMode);</p>
-<p>        document.getElementById(‘playBtn’).classList.toggle(‘active’, playing);</p>
-<p>        updateStatusBar();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function initNotes() {</p>
-<p>        const g = document.getElementById(‘noteGrid’);</p>
-<p>        g.innerHTML = ‘’;</p>
-<p>        </p>
-<p>        const modeSwitch = document.createElement(‘div’);</p>
-<p>        modeSwitch.style.cssText = ‘grid-column:1/-1;padding:12px;text-align:center;background:#1a1a1a;border-radius:4px;margin-bottom:8px;display:flex;gap:8px;justify-content:center’;</p>
-<p>        </p>
-<p>        const pianoBtn = document.createElement(‘button’);</p>
-<p>        pianoBtn.textContent = ‘Piano Notes’;</p>
-<p>        pianoBtn.style.flex = ‘1’;</p>
-<p>        pianoBtn.onclick = (e) =&amp;gt; { </p>
-<p>            e.stopPropagation();</p>
-<p>            noteMode = ‘piano’; </p>
-<p>            initNotes(); </p>
-<p>        };</p>
-<p>        if (noteMode === ‘piano’) pianoBtn.style.background = ‘#3a3a3a’;</p>
-<p>        </p>
-<p>        const freqBtn = document.createElement(‘button’);</p>
-<p>        freqBtn.textContent = ‘Frequency’;</p>
-<p>        freqBtn.style.flex = ‘1’;</p>
-<p>        freqBtn.onclick = (e) =&amp;gt; { </p>
-<p>            e.stopPropagation();</p>
-<p>            noteMode = ‘freq’; </p>
-<p>            initNotes(); </p>
-<p>        };</p>
-<p>        if (noteMode === ‘freq’) freqBtn.style.background = ‘#3a3a3a’;</p>
-<p>        </p>
-<p>        modeSwitch.appendChild(pianoBtn);</p>
-<p>        modeSwitch.appendChild(freqBtn);</p>
-<p>        g.appendChild(modeSwitch);</p>
-<p>        </p>
-<p>        const noteList = noteMode === ‘piano’ ? Object.keys(notes) : freqOptions;</p>
-<p>        </p>
-<p>        noteList.forEach(n =&amp;gt; {</p>
-<p>            const d = document.createElement(‘div’);</p>
-<p>            d.className = ‘note-item’;</p>
-<p>            d.textContent = noteMode === ‘piano’ ? n : n+’Hz’;</p>
-<p>            d.onclick = (e) =&amp;gt; { </p>
-<p>                e.stopPropagation();</p>
-<p>                selNote = n;</p>
-<p>                eraseMode = false;</p>
-<p>                const i = insts[selInst];</p>
-<p>                const baseFreq = typeof n === ‘number’ ? n : notes[n];</p>
-<p>                playNotePreview(baseFreq, i);</p>
-<p>            };</p>
-<p>            g.appendChild(d);</p>
-<p>        });</p>
-<p>    }</p>
-<p>    </p>
-<p>    function initColors() {</p>
-<p>        const g = document.getElementById(‘colors’);</p>
-<p>        g.innerHTML = ‘’;</p>
-<p>        colors.forEach(c =&amp;gt; {</p>
-<p>            const d = document.createElement(‘div’);</p>
-<p>            d.className = ‘color-box’;</p>
-<p>            d.style.backgroundColor = c;</p>
-<p>            d.onclick = () =&amp;gt; {</p>
-<p>                document.querySelectorAll(‘.color-box’).forEach(e=&amp;gt;e.classList.remove(‘selected’));</p>
-<p>                d.classList.add(‘selected’);</p>
-<p>            };</p>
-<p>            g.appendChild(d);</p>
-<p>        });</p>
-<p>        g.firstChild.classList.add(‘selected’);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function playNotePreview(baseFreq, inst) {</p>
-<p>        const freqMode = inst.freqMode || ‘relative’;</p>
-<p>        let startFreq, endFreq;</p>
-<p>        </p>
-<p>        if (freqMode === ‘fixed’) {</p>
-<p>            startFreq = inst.startFreq || 440;</p>
-<p>            endFreq = inst.endFreq || 440;</p>
-<p>        } else {</p>
-<p>            startFreq = baseFreq;</p>
-<p>            endFreq = baseFreq;</p>
-<p>        }</p>
-<p>        </p>
-<p>        playNote(startFreq, inst.wave, 0.3, startFreq, endFreq, inst.effect, inst.startVol, inst.endVol);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function playNote(freq, wave, dur, startFreq, endFreq, effect, startVol, endVol) {</p>
-<p>        const g = ctx.createGain();</p>
-<p>        g.connect(ctx.destination);</p>
-<p>        </p>
-<p>        const sVol = (startVol !== undefined ? startVol : 255) / 255 * 0.3;</p>
-<p>        const eVol = (endVol !== undefined ? endVol : 0) / 255 * 0.3;</p>
-<p>        </p>
-<p>        g.gain.setValueAtTime(sVol, ctx.currentTime);</p>
-<p>        if (eVol &amp;gt; 0.001) {</p>
-<p>            g.gain.linearRampToValueAtTime(eVol, ctx.currentTime+dur);</p>
-<p>        } else {</p>
-<p>            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+dur);</p>
-<p>        }</p>
-<p>        </p>
-<p>        if (wave === ‘noise’) {</p>
-<p>            const buf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);</p>
-<p>            const data = buf.getChannelData(0);</p>
-<p>            for (let i = 0; i &amp;lt; data.length; i++) data[i] = Math.random()*2-1;</p>
-<p>            const src = ctx.createBufferSource();</p>
-<p>            src.buffer = buf;</p>
-<p>            src.connect(g);</p>
-<p>            src.start();</p>
-<p>            src.stop(ctx.currentTime+dur);</p>
-<p>            oscs.push(src);</p>
-<p>        } else {</p>
-<p>            const osc = ctx.createOscillator();</p>
-<p>            osc.type = wave;</p>
-<p>            </p>
-<p>            const start = startFreq || freq;</p>
-<p>            const end = endFreq || freq;</p>
-<p>            </p>
-<p>            osc.frequency.setValueAtTime(start, ctx.currentTime);</p>
-<p>            if (start !== end) {</p>
-<p>                osc.frequency.linearRampToValueAtTime(end, ctx.currentTime+dur);</p>
-<p>            }</p>
-<p>            </p>
-<p>            if (effect === ‘Vibrato’) {</p>
-<p>                const lfo = ctx.createOscillator();</p>
-<p>                const lfoGain = ctx.createGain();</p>
-<p>                lfo.type = ‘sine’;</p>
-<p>                lfo.frequency.value = 6;</p>
-<p>                lfoGain.gain.value = 20;</p>
-<p>                lfo.connect(lfoGain);</p>
-<p>                lfoGain.connect(osc.frequency);</p>
-<p>                lfo.start(ctx.currentTime);</p>
-<p>                lfo.stop(ctx.currentTime + dur + 0.1);</p>
-<p>                oscs.push(lfo);</p>
-<p>            } else if (effect === ‘Tremolo’) {</p>
-<p>                const lfo = ctx.createOscillator();</p>
-<p>                const lfoGain = ctx.createGain();</p>
-<p>                lfo.type = ‘sine’;</p>
-<p>                lfo.frequency.value = 7;</p>
-<p>                lfoGain.gain.value = 0.2;</p>
-<p>                lfo.connect(lfoGain);</p>
-<p>                lfoGain.connect(g.gain);</p>
-<p>                lfo.start(ctx.currentTime);</p>
-<p>                lfo.stop(ctx.currentTime + dur + 0.1);</p>
-<p>                oscs.push(lfo);</p>
-<p>            } else if (effect === ‘Warble’) {</p>
-<p>                const lfo = ctx.createOscillator();</p>
-<p>                const lfoGain = ctx.createGain();</p>
-<p>                lfo.type = ‘sine’;</p>
-<p>                lfo.frequency.value = 4;</p>
-<p>                lfoGain.gain.value = 30;</p>
-<p>                lfo.connect(lfoGain);</p>
-<p>                lfoGain.connect(osc.frequency);</p>
-<p>                lfo.start(ctx.currentTime);</p>
-<p>                lfo.stop(ctx.currentTime + dur + 0.1);</p>
-<p>                oscs.push(lfo);</p>
-<p>            }</p>
-<p>            </p>
-<p>            osc.connect(g);</p>
-<p>            osc.start(ctx.currentTime);</p>
-<p>            osc.stop(ctx.currentTime+dur);</p>
-<p>            oscs.push(osc);</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function playRow(r) {</p>
-<p>        playingCells.forEach(cell =&amp;gt; cell.classList.remove(‘playing’));</p>
-<p>        playingCells = [];</p>
-<p>        </p>
-<p>        const bpm = parseInt(document.getElementById(‘bpm’).value);</p>
-<p>        const stepDur = (60/bpm);</p>
-<p>        </p>
-<p>        for (let c = 0; c &amp;lt; CHANNELS; c++) {</p>
-<p>            const n = pattern[r][c];</p>
-<p>            if (n) {</p>
-<p>                const cell = document.querySelector(`.note-cell[data-row=“${r}”][data-col=“${c}”]`);</p>
-<p>                if (cell) {</p>
-<p>                    cell.classList.add(‘playing’);</p>
-<p>                    playingCells.push(cell);</p>
-<p>                }</p>
-<p>                </p>
-<p>                const i = insts[n.inst] || insts[‘square’];</p>
-<p>                const baseFreq = typeof n.note === ‘number’ ? n.note : notes[n.note];</p>
-<p>                const noteLength = n.length || 1;</p>
-<p>                const dur = stepDur * noteLength * 0.9;</p>
-<p>                </p>
-<p>                let startFreq, endFreq;</p>
-<p>                const freqMode = i.freqMode || ‘relative’;</p>
-<p>                </p>
-<p>                if (freqMode === ‘fixed’) {</p>
-<p>                    startFreq = i.startFreq || 440;</p>
-<p>                    endFreq = i.endFreq || 440;</p>
-<p>                } else {</p>
-<p>                    startFreq = baseFreq;</p>
-<p>                    endFreq = baseFreq;</p>
-<p>                }</p>
-<p>                </p>
-<p>                playNote(startFreq, i.wave, dur, startFreq, endFreq, i.effect, i.startVol, i.endVol);</p>
-<p>            }</p>
-<p>        }</p>
-<p>    }</p>
-<p>    </p>
-<p>    function play() {</p>
-<p>        if (playing) return;</p>
-<p>        playing = true;</p>
-<p>        row = 0;</p>
-<p>        const bpm = parseInt(document.getElementById(‘bpm’).value);</p>
-<p>        const msPerStep = (60/bpm)*1000;</p>
-<p>        playRow(row);</p>
-<p>        updateModeButtons();</p>
-<p>        timer = setInterval(() =&amp;gt; {</p>
-<p>            row = (row+1)%ROWS;</p>
-<p>            playRow(row);</p>
-<p>        }, msPerStep);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function stop() {</p>
-<p>        playing = false;</p>
-<p>        clearInterval(timer);</p>
-<p>        oscs.forEach(o =&amp;gt; { try { o.stop(); } catch(e){} });</p>
-<p>        oscs = [];</p>
-<p>        playingCells.forEach(cell =&amp;gt; cell.classList.remove(‘playing’));</p>
-<p>        playingCells = [];</p>
-<p>        updateModeButtons();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function demo() {</p>
-<p>        // Cool Suspense Loop - 8 steps</p>
-<p>        ROWS = 8;</p>
-<p>        document.getElementById(‘stepCount’).value = 8;</p>
-<p>        document.getElementById(‘bpm’).value = 150;</p>
-<p>        beatsPerMeasure = 4;</p>
-<p>        document.getElementById(‘beatsPerMeasure’).value = 4;</p>
-<p>        </p>
-<p>        // Create a completely new pattern array</p>
-<p>        pattern = [];</p>
-<p>        for (let i = 0; i &amp;lt; ROWS; i++) {</p>
-<p>            pattern.push([null, null, null, null, null, null]);</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Recreate the instruments from the exported song</p>
-<p>        // Square wave melody (C4, C4, C4, C4, C4, C4, C4, C#4)</p>
-<p>        insts[‘melody’] = {</p>
-<p>            name:’Melody’,wave:’square’,color:’#4a1a1a’,text:’#ff6666’,</p>
-<p>            freqMode:’relative’,</p>
-<p>            startVol:255,endVol:0,effect:’None’,custom:true</p>
-<p>        };</p>
-<p>        </p>
-<p>        // Sine bass hits (50 Hz)</p>
-<p>        insts[‘sine_bass’] = {</p>
-<p>            name:’SineBass’,wave:’sine’,color:’#0a0a2a’,text:’#6666ff’,</p>
-<p>            freqMode:’fixed’,startFreq:50,endFreq:50,</p>
-<p>            startVol:255,endVol:0,effect:’None’,custom:true</p>
-<p>        };</p>
-<p>        </p>
-<p>        // Sawtooth bass (65 Hz and 69 Hz)</p>
-<p>        insts[‘saw_bass’] = {</p>
-<p>            name:’SawBass’,wave:’sawtooth’,color:’#1a2a1a’,text:’#66ff66’,</p>
-<p>            freqMode:’fixed’,startFreq:65,endFreq:65,</p>
-<p>            startVol:255,endVol:0,effect:’None’,custom:true</p>
-<p>        };</p>
-<p>        </p>
-<p>        insts[‘saw_bass2’] = {</p>
-<p>            name:’SawBass2’,wave:’sawtooth’,color:’#2a1a1a’,text:’#66ff99’,</p>
-<p>            freqMode:’fixed’,startFreq:69,endFreq:69,</p>
-<p>            startVol:255,endVol:0,effect:’None’,custom:true</p>
-<p>        };</p>
-<p>        </p>
-<p>        // Noise percussion</p>
-<p>        insts[‘perc’] = {</p>
-<p>            name:’Perc’,wave:’noise’,color:’#1a1a1a’,text:’#aaaaaa’,</p>
-<p>            freqMode:’relative’,</p>
-<p>            startVol:255,endVol:0,effect:’None’,custom:true</p>
-<p>        };</p>
-<p>        </p>
-<p>        // Step 1: C4 melody + 3x sine bass (50Hz) + saw bass (65Hz)</p>
-<p>        pattern[0][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[0][1] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[0][2] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[0][3] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[0][4] = {note:65,inst:’saw_bass’,length:1};</p>
-<p>        </p>
-<p>        // Step 2: Same as step 1</p>
-<p>        pattern[1][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[1][1] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[1][2] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[1][3] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[1][4] = {note:65,inst:’saw_bass’,length:1};</p>
-<p>        </p>
-<p>        // Step 3: C4 melody + noise percussion</p>
-<p>        pattern[2][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[2][1] = {note:’C4’,inst:’perc’,length:1};</p>
-<p>        </p>
-<p>        // Step 4: C4 melody + 2x saw bass (69Hz)</p>
-<p>        pattern[3][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[3][1] = {note:69,inst:’saw_bass2’,length:1};</p>
-<p>        pattern[3][2] = {note:69,inst:’saw_bass2’,length:1};</p>
-<p>        </p>
-<p>        // Step 5: Same as step 1</p>
-<p>        pattern[4][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[4][1] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[4][2] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[4][3] = {note:50,inst:’sine_bass’,length:1};</p>
-<p>        pattern[4][4] = {note:65,inst:’saw_bass’,length:1};</p>
-<p>        </p>
-<p>        // Step 6: C4 melody + noise percussion</p>
-<p>        pattern[5][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[5][1] = {note:’C4’,inst:’perc’,length:1};</p>
-<p>        </p>
-<p>        // Step 7: C4 melody + 2x saw bass (69Hz)</p>
-<p>        pattern[6][0] = {note:’C4’,inst:’melody’,length:1};</p>
-<p>        pattern[6][1] = {note:69,inst:’saw_bass2’,length:1};</p>
-<p>        pattern[6][2] = {note:69,inst:’saw_bass2’,length:1};</p>
-<p>        </p>
-<p>        // Step 8: C#4 melody only</p>
-<p>        pattern[7][0] = {note:’C#4’,inst:’melody’,length:1};</p>
-<p>        </p>
-<p>        initInsts();</p>
-<p>        initGrid();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function preview() {</p>
-<p>        const f1 = parseInt(document.getElementById(‘iStart’).value);</p>
-<p>        const f2 = parseInt(document.getElementById(‘iEnd’).value);</p>
-<p>        const w = document.getElementById(‘iWave’).value.toLowerCase();</p>
-<p>        const ef = document.getElementById(‘iEffect’).value;</p>
-<p>        const sVol = parseInt(document.getElementById(‘iStartVol’).value);</p>
-<p>        const eVol = parseInt(document.getElementById(‘iEndVol’).value);</p>
-<p>        playNote(f1, w, 0.5, f1, f2, ef, sVol, eVol);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function saveInst() {</p>
-<p>        const name = document.getElementById(‘iName’).value || ‘Custom’;</p>
-<p>        const wave = document.getElementById(‘iWave’).value.toLowerCase();</p>
-<p>        const freqMode = document.getElementById(‘iFreqMode’).value;</p>
-<p>        const start = parseInt(document.getElementById(‘iStart’).value);</p>
-<p>        const end = parseInt(document.getElementById(‘iEnd’).value);</p>
-<p>        const effect = document.getElementById(‘iEffect’).value;</p>
-<p>        const col = document.querySelector(‘.color-box.selected’).style.backgroundColor;</p>
-<p>        const startVol = parseInt(document.getElementById(‘iStartVol’).value);</p>
-<p>        const endVol = parseInt(document.getElementById(‘iEndVol’).value);</p>
-<p>        </p>
-<p>        const id = editingInstId || ‘custom_’+Date.now();</p>
-<p>        insts[id] = {</p>
-<p>            name,wave,color:col,text:’#e8e8e8’,</p>
-<p>            freqMode,</p>
-<p>            startFreq: freqMode === ‘fixed’ ? start : undefined,</p>
-<p>            endFreq: freqMode === ‘fixed’ ? end : undefined,</p>
-<p>            effect,startVol,endVol,</p>
-<p>            custom: !editingInstId || insts[editingInstId]?.custom</p>
-<p>        };</p>
-<p>        </p>
-<p>        selInst = id;</p>
-<p>        initInsts();</p>
-<p>        closeModal(‘instModal’);</p>
-<p>        openModal(‘instMgrModal’);</p>
-<p>        initInstMgr();</p>
-<p>    }</p>
-<p>    </p>
-<p>    function exportCode() {</p>
-<p>        const name = document.getElementById(‘songName’).value.replace(/[^a-zA-Z0-9_]/g,’’) || ‘mySong’;</p>
-<p>        const bpm = parseInt(document.getElementById(‘bpm’).value);</p>
-<p>        const STEP_MS = Math.round(60000/bpm);</p>
-<p>        </p>
-<p>        // Type definitions for internal use</p>
-<p>        const waveShapeMap = {</p>
-<p>            sine: ‘WaveShape.Sine’,</p>
-<p>            square: ‘WaveShape.Square’,</p>
-<p>            sawtooth: ‘WaveShape.Sawtooth’,</p>
-<p>            triangle: ‘WaveShape.Triangle’,</p>
-<p>            noise: ‘WaveShape.Noise’</p>
-<p>        };</p>
-<p>        </p>
-<p>        const effectMap = {</p>
-<p>            None: ‘SoundExpressionEffect.None’,</p>
-<p>            Vibrato: ‘SoundExpressionEffect.Vibrato’,</p>
-<p>            Tremolo: ‘SoundExpressionEffect.Tremolo’,</p>
-<p>            Warble: ‘SoundExpressionEffect.Warble’</p>
-<p>        };</p>
-<p>        </p>
-<p>        // Step 1: Build steps array from tracker grid</p>
-<p>        const steps = [];</p>
-<p>        for (let r = 0; r &amp;lt; ROWS; r++) {</p>
-<p>            const stepSfx = [];</p>
-<p>            for (let c = 0; c &amp;lt; CHANNELS; c++) {</p>
-<p>                const n = pattern[r][c];</p>
-<p>                if (n) {</p>
-<p>                    const i = insts[n.inst] || insts[‘square’];</p>
-<p>                    const baseFreq = typeof n.note === ‘number’ ? n.note : notes[n.note];</p>
-<p>                    </p>
-<p>                    let sf, ef;</p>
-<p>                    const freqMode = i.freqMode || ‘relative’;</p>
-<p>                    </p>
-<p>                    if (freqMode === ‘fixed’) {</p>
-<p>                        sf = i.startFreq || 440;</p>
-<p>                        ef = i.endFreq || 440;</p>
-<p>                    } else {</p>
-<p>                        sf = baseFreq;</p>
-<p>                        ef = baseFreq;</p>
-<p>                    }</p>
-<p>                    </p>
-<p>                    const sVol = i.startVol !== undefined ? i.startVol : 255;</p>
-<p>                    const eVol = i.endVol !== undefined ? i.endVol : 0;</p>
-<p>                    const dur = STEP_MS * (n.length || 1);</p>
-<p>                    </p>
-<p>                    stepSfx.push({</p>
-<p>                        wave: waveShapeMap[i.wave],</p>
-<p>                        sf: sf,</p>
-<p>                        ef: ef,</p>
-<p>                        sv: sVol,</p>
-<p>                        ev: eVol,</p>
-<p>                        dur: dur,</p>
-<p>                        fx: effectMap[i.effect || ‘None’],</p>
-<p>                        curve: ‘InterpolationCurve.Linear’</p>
-<p>                    });</p>
-<p>                }</p>
-<p>            }</p>
-<p>            steps.push(stepSfx);</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Step 2: Deduplicate SFX into a table</p>
-<p>        const sfxMap = new Map();</p>
-<p>        const sfxList = [];</p>
-<p>        </p>
-<p>        function sfxKey(p) {</p>
-<p>            return `${p.wave}:${p.sf}:${p.ef}:${p.sv}:${p.ev}:${p.dur}:${p.fx}:${p.curve}`;</p>
-<p>        }</p>
-<p>        </p>
-<p>        function getSfxId(p) {</p>
-<p>            const key = sfxKey(p);</p>
-<p>            const existing = sfxMap.get(key);</p>
-<p>            if (existing !== undefined) return existing;</p>
-<p>            </p>
-<p>            const id = sfxList.length;</p>
-<p>            sfxList.push(p);</p>
-<p>            sfxMap.set(key, id);</p>
-<p>            return id;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Step 3: Build byte sequence for song data</p>
-<p>        const bytes = [];</p>
-<p>        for (const step of steps) {</p>
-<p>            const count = step.length;</p>
-<p>            bytes.push(count);</p>
-<p>            for (const p of step) {</p>
-<p>                const id = getSfxId(p);</p>
-<p>                bytes.push(id);</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Step 4: Convert bytes to hex string</p>
-<p>        let hexStr = ‘’;</p>
-<p>        for (let i = 0; i &amp;lt; bytes.length; i++) {</p>
-<p>            hexStr += bytes[i].toString(16).padStart(2, ‘0’);</p>
-<p>            // Add space every 2 bytes for readability</p>
-<p>            if ((i + 1) % 16 === 0 &amp;&amp; i &amp;lt; bytes.length - 1) {</p>
-<p>                hexStr += ‘\n            ‘;</p>
-<p>            } else if (i &amp;lt; bytes.length - 1) {</p>
-<p>                hexStr += ‘ ‘;</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Step 5: Generate SFX table arrays</p>
-<p>        const sfxWave = sfxList.map(s =&amp;gt; s.wave).join(‘, ‘);</p>
-<p>        const sfxStartFreq = sfxList.map(s =&amp;gt; s.sf).join(‘, ‘);</p>
-<p>        const sfxEndFreq = sfxList.map(s =&amp;gt; s.ef).join(‘, ‘);</p>
-<p>        const sfxStartVol = sfxList.map(s =&amp;gt; s.sv).join(‘, ‘);</p>
-<p>        const sfxEndVol = sfxList.map(s =&amp;gt; s.ev).join(‘, ‘);</p>
-<p>        const sfxDuration = sfxList.map(s =&amp;gt; s.dur).join(‘, ‘);</p>
-<p>        const sfxEffect = sfxList.map(s =&amp;gt; s.fx).join(‘, ‘);</p>
-<p>        const sfxCurve = sfxList.map(s =&amp;gt; s.curve).join(‘, ‘);</p>
-<p>        </p>
-<p>        // Step 6: Generate song data structure for enum-based system</p>
-<p>        const code = `// Add this to your existing utmMusic extension</p>
-<p>```</p>
-<br/>
-<p>// 1. First, add this enum entry to your UTMSong enum:</p>
-<p>enum UTMSong {</p>
-<p>//% block=”${name}”</p>
-<p>${name.toUpperCase()}</p>
-<p>}</p>
-<br/>
-<p>// 2. Then add this case to the getSongData() function:</p>
-<p>case UTMSong.${name.toUpperCase()}:</p>
-<p>return {</p>
-<p>stepMs: ${STEP_MS},</p>
-<p>sfxWave: [${sfxWave}],</p>
-<p>sfxStartFreq: [${sfxStartFreq}],</p>
-<p>sfxEndFreq: [${sfxEndFreq}],</p>
-<p>sfxStartVol: [${sfxStartVol}],</p>
-<p>sfxEndVol: [${sfxEndVol}],</p>
-<p>sfxDuration: [${sfxDuration}],</p>
-<p>sfxEffect: [${sfxEffect}],</p>
-<p>sfxCurve: [${sfxCurve}],</p>
-<p>data: hex`</p>
-<p>${hexStr}</p>
-<p>`</p>
-<p>};</p>
-<br/>
-<p>// Stats for ${name}:</p>
-<p>// - Unique sound effects: ${sfxList.length}</p>
-<p>// - Total steps: ${ROWS}</p>
-<p>// - Song data size: ${bytes.length} bytes</p>
-<p>// - Compression ratio: ${Math.round((1 - bytes.length / (ROWS * CHANNELS * 50)) * 100)}% smaller than uncompressed</p>
-<br/>
-<p>// ============================================================</p>
-<p>// FULL EXTENSION STRUCTURE (for reference)</p>
-<p>// ============================================================</p>
-<p>// Copy this structure to your main.ts file in your MakeCode extension:</p>
-<p>/*</p>
-<p>//% color=”#ff0000” weight=100 icon=”\uf025” block=“UTMMusic”</p>
-<p>namespace utmMusic {</p>
-<br/>
-<p>```</p>
-<p>export enum UTMSong {</p>
-<p>    //% block=“${name}”</p>
-<p>    ${name.toUpperCase()}</p>
-<p>    // Add more songs here...</p>
-<p>}</p>
-<br/>
-<p>interface SongData {</p>
-<p>    stepMs: number;</p>
-<p>    sfxWave: WaveShape[];</p>
-<p>    sfxStartFreq: number[];</p>
-<p>    sfxEndFreq: number[];</p>
-<p>    sfxStartVol: number[];</p>
-<p>    sfxEndVol: number[];</p>
-<p>    sfxDuration: number[];</p>
-<p>    sfxEffect: SoundExpressionEffect[];</p>
-<p>    sfxCurve: InterpolationCurve[];</p>
-<p>    data: Buffer;</p>
-<p>}</p>
-<br/>
-<p>function getSongData(song: UTMSong): SongData {</p>
-<p>    switch (song) {</p>
-<p>        case UTMSong.${name.toUpperCase()}:</p>
-<p>            return {</p>
-<p>                stepMs: ${STEP_MS},</p>
-<p>                sfxWave: [${sfxWave}],</p>
-<p>                sfxStartFreq: [${sfxStartFreq}],</p>
-<p>                sfxEndFreq: [${sfxEndFreq}],</p>
-<p>                sfxStartVol: [${sfxStartVol}],</p>
-<p>                sfxEndVol: [${sfxEndVol}],</p>
-<p>                sfxDuration: [${sfxDuration}],</p>
-<p>                sfxEffect: [${sfxEffect}],</p>
-<p>                sfxCurve: [${sfxCurve}],</p>
-<p>                data: hex\`</p>
-<p>                    ${hexStr}</p>
-<p>                \`</p>
-<p>            };</p>
-<p>        // Add more cases here...</p>
-<p>        default:</p>
-<p>            return null;</p>
-<p>    }</p>
-<p>}</p>
-<br/>
-<p>function playSfx(songData: SongData, id: number) {</p>
-<p>    const sfxCount = songData.sfxWave.length;</p>
-<p>    if (id &amp;lt; 0 || id &amp;gt;= sfxCount) return;</p>
-<p>    </p>
-<p>    music.play(</p>
-<p>        music.createSoundEffect(</p>
-<p>            songData.sfxWave[id],</p>
-<p>            songData.sfxStartFreq[id],</p>
-<p>            songData.sfxEndFreq[id],</p>
-<p>            songData.sfxStartVol[id],</p>
-<p>            songData.sfxEndVol[id],</p>
-<p>            songData.sfxDuration[id],</p>
-<p>            songData.sfxEffect[id],</p>
-<p>            songData.sfxCurve[id]</p>
-<p>        ),</p>
-<p>        music.PlaybackMode.InBackground</p>
-<p>    );</p>
-<p>}</p>
-<br/>
-<p>function playSongData(songData: SongData) {</p>
-<p>    let i = 0;</p>
-<p>    const data = songData.data;</p>
-<p>    while (i &amp;lt; data.length) {</p>
-<p>        const count = data[i++];</p>
-<p>        for (let j = 0; j &amp;lt; count; j++) {</p>
-<p>            const sfxId = data[i++];</p>
-<p>            playSfx(songData, sfxId);</p>
-<p>        }</p>
-<p>        pause(songData.stepMs);</p>
-<p>    }</p>
-<p>}</p>
-<br/>
-<p>//% blockId=play_utm_song</p>
-<p>//% block=“play UTM song %song”</p>
-<p>//% song.defl=UTMSong.${name.toUpperCase()}</p>
-<p>export function playSong(song: UTMSong) {</p>
-<p>    const songData = getSongData(song);</p>
-<p>    if (songData) {</p>
-<p>        playSongData(songData);</p>
-<p>    }</p>
-<p>}</p>
-<br/>
-<p>//% blockId=play_utm_song_loop</p>
-<p>//% block=“play UTM song %song in loop”</p>
-<p>//% song.defl=UTMSong.${name.toUpperCase()}</p>
-<p>export function playSongLoop(song: UTMSong) {</p>
-<p>    const songData = getSongData(song);</p>
-<p>    if (songData) {</p>
-<p>        forever(function () {</p>
-<p>            playSongData(songData);</p>
-<p>        });</p>
-<p>    }</p>
-<p>}</p>
-<p>```</p>
-<br/>
-<p>}</p>
-<p>*/`;</p>
-<br/>
-<p>```</p>
-<p>        document.getElementById(‘code’).textContent = code;</p>
-<p>        openModal(‘exportModal’);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function copyCode() {</p>
-<p>        navigator.clipboard.writeText(document.getElementById(‘code’).textContent);</p>
-<p>        alert(‘Instructions copied to clipboard!’);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function mergeExtension() {</p>
-<p>        const existingCode = document.getElementById(‘existingExtension’).value.trim();</p>
-<p>        </p>
-<p>        if (!existingCode) {</p>
-<p>            alert(‘Please paste your existing extension code first!’);</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Get the current song data</p>
-<p>        const name = document.getElementById(‘songName’).value.replace(/[^a-zA-Z0-9_]/g,’’) || ‘mySong’;</p>
-<p>        const songData = generateSongData();</p>
-<p>        </p>
-<p>        if (!songData) {</p>
-<p>            alert(‘Error generating song data!’);</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Check if it’s a valid extension</p>
-<p>        if (!existingCode.includes(‘namespace utmMusic’) &amp;&amp; !existingCode.includes(‘namespace UTMMusic’)) {</p>
-<p>            alert(‘This doesn\’t look like a utmMusic extension. Make sure it contains “namespace utmMusic”.’);</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        let mergedCode = existingCode;</p>
-<p>        </p>
-<p>        // Step 1: Add enum entry</p>
-<p>        const enumEntry = `    //% block=“${name}”\n    ${name.toUpperCase()},`;</p>
-<p>        </p>
-<p>        // Find the UTMSong enum and add the new song</p>
-<p>        const enumMatch = mergedCode.match(/(export\s+enum\s+UTMSong\s*\{)([\s\S]*?)(\n\s*\})/);</p>
-<p>        if (enumMatch) {</p>
-<p>            const existingEntries = enumMatch[2];</p>
-<p>            // Check if song already exists</p>
-<p>            if (existingEntries.includes(name.toUpperCase())) {</p>
-<p>                if (!confirm(`Song “${name}” already exists in the enum. Replace it?`)) {</p>
-<p>                    return;</p>
-<p>                }</p>
-<p>                // Remove existing entry (including comma)</p>
-<p>                const regex = new RegExp(`\\s*//.*\\n\\s*${name.toUpperCase()}[,]?`, ‘g’);</p>
-<p>                mergedCode = mergedCode.replace(regex, ‘’);</p>
-<p>            }</p>
-<p>            // Add new entry before closing brace (with comma)</p>
-<p>            mergedCode = mergedCode.replace(</p>
-<p>                /(export\s+enum\s+UTMSong\s*\{[\s\S]*?)(\n\s*\})/,</p>
-<p>                `$1\n${enumEntry}$2`</p>
-<p>            );</p>
-<p>        } else {</p>
-<p>            alert(‘Could not find UTMSong enum. Make sure your extension has the enum defined.’);</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Step 2: Add case to getSongData</p>
-<p>        const caseCode = `        case UTMSong.${name.toUpperCase()}:\n            return {\n                stepMs: ${songData.stepMs},\n                sfxWave: [${songData.sfxWave}],\n                sfxStartFreq: [${songData.sfxStartFreq}],\n                sfxEndFreq: [${songData.sfxEndFreq}],\n                sfxStartVol: [${songData.sfxStartVol}],\n                sfxEndVol: [${songData.sfxEndVol}],\n                sfxDuration: [${songData.sfxDuration}],\n                sfxEffect: [${songData.sfxEffect}],\n                sfxCurve: [${songData.sfxCurve}],\n                data: hex\`\n                    ${songData.hexStr}\n                \`\n            };`;</p>
-<p>        </p>
-<p>        // Find getSongData function and add case</p>
-<p>        const switchMatch = mergedCode.match(/(function\s+getSongData[\s\S]*?switch\s*\([^)]+\)\s*\{)([\s\S]*?)(default:[\s\S]*?\n\s*\})/);</p>
-<p>        if (switchMatch) {</p>
-<p>            // Check if case already exists and remove it</p>
-<p>            const caseRegex = new RegExp(`\\s*case\\s+UTMSong\\.${name.toUpperCase()}:[\\s\\S]*?(?=case\\s+|default:|\\n\\s*\\})`, ‘g’);</p>
-<p>            mergedCode = mergedCode.replace(caseRegex, ‘’);</p>
-<p>            </p>
-<p>            // Add new case before default</p>
-<p>            mergedCode = mergedCode.replace(</p>
-<p>                /(function\s+getSongData[\s\S]*?switch\s*\([^)]+\)\s*\{[\s\S]*?)(default:)/,</p>
-<p>                `$1${caseCode}\n\n        $2`</p>
-<p>            );</p>
-<p>        } else {</p>
-<p>            alert(‘Could not find getSongData switch statement. Make sure your extension has this function.’);</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Display the merged code</p>
-<p>        document.getElementById(‘code’).textContent = mergedCode;</p>
-<p>        document.getElementById(‘existingExtension’).value = ‘’;</p>
-<p>        </p>
-<p>        alert(`Successfully merged song “${name}” into your extension!\n\nThe merged code is shown below. Copy it and replace your main.ts file.`);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function generateSongData() {</p>
-<p>        const name = document.getElementById(‘songName’).value.replace(/[^a-zA-Z0-9_]/g,’’) || ‘mySong’;</p>
-<p>        const bpm = parseInt(document.getElementById(‘bpm’).value);</p>
-<p>        const STEP_MS = Math.round(60000/bpm);</p>
-<p>        </p>
-<p>        const waveShapeMap = {</p>
-<p>            sine: ‘WaveShape.Sine’,</p>
-<p>            square: ‘WaveShape.Square’,</p>
-<p>            sawtooth: ‘WaveShape.Sawtooth’,</p>
-<p>            triangle: ‘WaveShape.Triangle’,</p>
-<p>            noise: ‘WaveShape.Noise’</p>
-<p>        };</p>
-<p>        </p>
-<p>        const effectMap = {</p>
-<p>            None: ‘SoundExpressionEffect.None’,</p>
-<p>            Vibrato: ‘SoundExpressionEffect.Vibrato’,</p>
-<p>            Tremolo: ‘SoundExpressionEffect.Tremolo’,</p>
-<p>            Warble: ‘SoundExpressionEffect.Warble’</p>
-<p>        };</p>
-<p>        </p>
-<p>        const steps = [];</p>
-<p>        for (let r = 0; r &amp;lt; ROWS; r++) {</p>
-<p>            const stepSfx = [];</p>
-<p>            for (let c = 0; c &amp;lt; CHANNELS; c++) {</p>
-<p>                const n = pattern[r][c];</p>
-<p>                if (n) {</p>
-<p>                    const i = insts[n.inst] || insts[‘square’];</p>
-<p>                    const baseFreq = typeof n.note === ‘number’ ? n.note : notes[n.note];</p>
-<p>                    </p>
-<p>                    let sf, ef;</p>
-<p>                    const freqMode = i.freqMode || ‘relative’;</p>
-<p>                    </p>
-<p>                    if (freqMode === ‘fixed’) {</p>
-<p>                        sf = i.startFreq || 440;</p>
-<p>                        ef = i.endFreq || 440;</p>
-<p>                    } else {</p>
-<p>                        sf = baseFreq;</p>
-<p>                        ef = baseFreq;</p>
-<p>                    }</p>
-<p>                    </p>
-<p>                    const sVol = i.startVol !== undefined ? i.startVol : 255;</p>
-<p>                    const eVol = i.endVol !== undefined ? i.endVol : 0;</p>
-<p>                    const dur = STEP_MS * (n.length || 1);</p>
-<p>                    </p>
-<p>                    stepSfx.push({</p>
-<p>                        wave: waveShapeMap[i.wave],</p>
-<p>                        sf: sf,</p>
-<p>                        ef: ef,</p>
-<p>                        sv: sVol,</p>
-<p>                        ev: eVol,</p>
-<p>                        dur: dur,</p>
-<p>                        fx: effectMap[i.effect || ‘None’],</p>
-<p>                        curve: ‘InterpolationCurve.Linear’</p>
-<p>                    });</p>
-<p>                }</p>
-<p>            }</p>
-<p>            steps.push(stepSfx);</p>
-<p>        }</p>
-<p>        </p>
-<p>        const sfxMap = new Map();</p>
-<p>        const sfxList = [];</p>
-<p>        </p>
-<p>        function sfxKey(p) {</p>
-<p>            return `${p.wave}:${p.sf}:${p.ef}:${p.sv}:${p.ev}:${p.dur}:${p.fx}:${p.curve}`;</p>
-<p>        }</p>
-<p>        </p>
-<p>        function getSfxId(p) {</p>
-<p>            const key = sfxKey(p);</p>
-<p>            const existing = sfxMap.get(key);</p>
-<p>            if (existing !== undefined) return existing;</p>
-<p>            </p>
-<p>            const id = sfxList.length;</p>
-<p>            sfxList.push(p);</p>
-<p>            sfxMap.set(key, id);</p>
-<p>            return id;</p>
-<p>        }</p>
-<p>        </p>
-<p>        const bytes = [];</p>
-<p>        for (const step of steps) {</p>
-<p>            const count = step.length;</p>
-<p>            bytes.push(count);</p>
-<p>            for (const p of step) {</p>
-<p>                const id = getSfxId(p);</p>
-<p>                bytes.push(id);</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        let hexStr = ‘’;</p>
-<p>        for (let i = 0; i &amp;lt; bytes.length; i++) {</p>
-<p>            hexStr += bytes[i].toString(16).padStart(2, ‘0’);</p>
-<p>            if ((i + 1) % 16 === 0 &amp;&amp; i &amp;lt; bytes.length - 1) {</p>
-<p>                hexStr += ‘\n                    ‘;</p>
-<p>            } else if (i &amp;lt; bytes.length - 1) {</p>
-<p>                hexStr += ‘ ‘;</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        return {</p>
-<p>            stepMs: STEP_MS,</p>
-<p>            sfxWave: sfxList.map(s =&amp;gt; s.wave).join(‘, ‘),</p>
-<p>            sfxStartFreq: sfxList.map(s =&amp;gt; s.sf).join(‘, ‘),</p>
-<p>            sfxEndFreq: sfxList.map(s =&amp;gt; s.ef).join(‘, ‘),</p>
-<p>            sfxStartVol: sfxList.map(s =&amp;gt; s.sv).join(‘, ‘),</p>
-<p>            sfxEndVol: sfxList.map(s =&amp;gt; s.ev).join(‘, ‘),</p>
-<p>            sfxDuration: sfxList.map(s =&amp;gt; s.dur).join(‘, ‘),</p>
-<p>            sfxEffect: sfxList.map(s =&amp;gt; s.fx).join(‘, ‘),</p>
-<p>            sfxCurve: sfxList.map(s =&amp;gt; s.curve).join(‘, ‘),</p>
-<p>            hexStr: hexStr,</p>
-<p>            sfxCount: sfxList.length,</p>
-<p>            totalSteps: ROWS,</p>
-<p>            dataSize: bytes.length</p>
-<p>        };</p>
-<p>    }</p>
-<p>    </p>
-<p>    function saveSong() {</p>
-<p>        alert(‘Song saved!’);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function loadSong() {</p>
-<p>        alert(‘No saves found’);</p>
-<p>    }</p>
-<p>    </p>
-<p>    function openModal(id) { document.getElementById(id).classList.add(‘active’); }</p>
-<p>    function closeModal(id) { document.getElementById(id).classList.remove(‘active’); }</p>
-<p>    </p>
-<p>    document.getElementById(‘noteBtn’).onclick = e =&amp;gt; {</p>
-<p>        const p = document.getElementById(‘notePopup’);</p>
-<p>        p.classList.toggle(‘active’);</p>
-<p>    };</p>
-<p>    </p>
-<p>    document.addEventListener(‘click’, e =&amp;gt; {</p>
-<p>        if (!e.target.closest(‘#noteBtn’) &amp;&amp; !e.target.closest(‘#notePopup’)) {</p>
-<p>            document.getElementById(‘notePopup’).classList.remove(‘active’);</p>
-<p>        }</p>
-<p>    });</p>
-<p>    </p>
-<p>    document.getElementById(‘playBtn’).onclick = play;</p>
-<p>    document.getElementById(‘stopBtn’).onclick = stop;</p>
-<p>    document.getElementById(‘drawBtn’).onclick = () =&amp;gt; {</p>
-<p>        drawMode = true;</p>
-<p>        selectMode = false;</p>
-<p>        eraseMode = false;</p>
-<p>        pasteMode = false;</p>
-<p>        updateModeButtons();</p>
-<p>    };</p>
-<p>    document.getElementById(‘selectBtn’).onclick = () =&amp;gt; {</p>
-<p>        selectMode = !selectMode;</p>
-<p>        if (selectMode) {</p>
-<p>            drawMode = false;</p>
-<p>            eraseMode = false;</p>
-<p>            pasteMode = false;</p>
-<p>        }</p>
-<p>        updateModeButtons();</p>
-<p>        initGrid();</p>
-<p>    };</p>
-<p>    document.getElementById(‘eraseBtn’).onclick = () =&amp;gt; { </p>
-<p>        eraseMode = !eraseMode;</p>
-<p>        if (eraseMode) {</p>
-<p>            drawMode = false;</p>
-<p>            selectMode = false;</p>
-<p>            pasteMode = false;</p>
-<p>        }</p>
-<p>        updateModeButtons();</p>
-<p>        initGrid();</p>
-<p>    };</p>
-<p>    document.getElementById(‘copyBtn’).onclick = copySelection;</p>
-<p>    document.getElementById(‘pasteBtn’).onclick = startPaste;</p>
-<p>    document.getElementById(‘clearBtn’).onclick = () =&amp;gt; { </p>
-<p>        if (confirm(‘Clear all notes?’)) {</p>
-<p>            // Completely reset the pattern</p>
-<p>            for (let r = 0; r &amp;lt; ROWS; r++) {</p>
-<p>                for (let c = 0; c &amp;lt; CHANNELS; c++) {</p>
-<p>                    pattern[r][c] = null;</p>
-<p>                }</p>
-<p>            }</p>
-<p>            </p>
-<p>            // Reset all states</p>
-<p>            selectedCells.clear();</p>
-<p>            copiedNotes = [];</p>
-<p>            pasteMode = false;</p>
-<p>            isDraggingNotes = false;</p>
-<p>            pastePreviewCells = [];</p>
-<p>            draggedNotes = [];</p>
-<p>            dragStart = null;</p>
-<p>            dragOrigin = null;</p>
-<p>            </p>
-<p>            updateSelection();</p>
-<p>            updateStatusBar();</p>
-<p>            initGrid(); </p>
-<p>        }</p>
-<p>    };</p>
-<p>    document.getElementById(‘demoBtn’).onclick = demo;</p>
-<p>    document.getElementById(‘shortcutBtn’).onclick = () =&amp;gt; openModal(‘shortcutModal’);</p>
-<p>    document.getElementById(‘setStepsBtn’).onclick = setSteps;</p>
-<p>    document.getElementById(‘instMgrBtn’).onclick = () =&amp;gt; { openModal(‘instMgrModal’); initInstMgr(); };</p>
-<p>    document.getElementById(‘exportBtn’).onclick = exportCode;</p>
-<p>    document.getElementById(‘saveBtn’).onclick = saveSong;</p>
-<p>    document.getElementById(‘loadBtn’).onclick = loadSong;</p>
-<p>    document.getElementById(‘noteLength’).addEventListener(‘input’, (e) =&amp;gt; {</p>
-<p>        selNoteLength = parseInt(e.target.value) || 1;</p>
-<p>    });</p>
-<p>    document.getElementById(‘beatsPerMeasure’).addEventListener(‘input’, () =&amp;gt; {</p>
-<p>        beatsPerMeasure = parseInt(document.getElementById(‘beatsPerMeasure’).value) || 4;</p>
-<p>        initGrid();</p>
-<p>    });</p>
-<p>    </p>
-<p>    // Keyboard shortcuts</p>
-<p>    document.addEventListener(‘keydown’, (e) =&amp;gt; {</p>
-<p>        // Don’t trigger shortcuts when typing in input fields</p>
-<p>        if (e.target.tagName === ‘INPUT’ || e.target.tagName === ‘SELECT’ || e.target.tagName === ‘TEXTAREA’) {</p>
-<p>            return;</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Space - Play/Stop</p>
-<p>        if (e.code === ‘Space’) {</p>
-<p>            e.preventDefault();</p>
-<p>            if (playing) stop(); else play();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // S - Select mode</p>
-<p>        if (e.code === ‘KeyS’ &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {</p>
-<p>            e.preventDefault();</p>
-<p>            selectMode = !selectMode;</p>
-<p>            if (selectMode) { drawMode = false; eraseMode = false; pasteMode = false; }</p>
-<p>            updateModeButtons();</p>
-<p>            initGrid();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // E - Erase mode</p>
-<p>        if (e.code === ‘KeyE’ &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {</p>
-<p>            e.preventDefault();</p>
-<p>            eraseMode = !eraseMode;</p>
-<p>            if (eraseMode) { drawMode = false; selectMode = false; pasteMode = false; }</p>
-<p>            updateModeButtons();</p>
-<p>            initGrid();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // D - Draw mode (disable other modes)</p>
-<p>        if (e.code === ‘KeyD’ &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey) {</p>
-<p>            e.preventDefault();</p>
-<p>            drawMode = true;</p>
-<p>            selectMode = false;</p>
-<p>            eraseMode = false;</p>
-<p>            pasteMode = false;</p>
-<p>            updateModeButtons();</p>
-<p>            initGrid();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Ctrl/Cmd + C - Copy</p>
-<p>        if ((e.ctrlKey || e.metaKey) &amp;&amp; e.code === ‘KeyC’) {</p>
-<p>            e.preventDefault();</p>
-<p>            copySelection();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Ctrl/Cmd + V - Paste</p>
-<p>        if ((e.ctrlKey || e.metaKey) &amp;&amp; e.code === ‘KeyV’) {</p>
-<p>            e.preventDefault();</p>
-<p>            startPaste();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Ctrl/Cmd + X - Cut</p>
-<p>        if ((e.ctrlKey || e.metaKey) &amp;&amp; e.code === ‘KeyX’) {</p>
-<p>            e.preventDefault();</p>
-<p>            cutSelection();</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Delete - Clear selection</p>
-<p>        if (e.code === ‘Delete’ || e.code === ‘Backspace’) {</p>
-<p>            e.preventDefault();</p>
-<p>            if (selectedCells.size &amp;gt; 0) {</p>
-<p>                deleteSelection();</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Escape - Clear selection or cancel paste</p>
-<p>        if (e.code === ‘Escape’) {</p>
-<p>            e.preventDefault();</p>
-<p>            if (pasteMode) {</p>
-<p>                cancelPaste();</p>
-<p>            } else {</p>
-<p>                selectedCells.clear();</p>
-<p>                updateSelection();</p>
-<p>            }</p>
-<p>        }</p>
-<p>        </p>
-<p>        // Enter - Place pasted notes</p>
-<p>        if (e.code === ‘Enter’ &amp;&amp; pasteMode) {</p>
-<p>            e.preventDefault();</p>
-<p>            placePastedNotes();</p>
-<p>        }</p>
-<p>    });</p>
-<p>    </p>
-<p>    // Prevent text selection during drag</p>
-<p>    document.addEventListener(‘selectstart’, (e) =&amp;gt; {</p>
-<p>        if (dragStart) e.preventDefault();</p>
-<p>    });</p>
-<p>    </p>
-<p>    initInsts();</p>
-<p>    initGrid();</p>
-<p>    initNotes();</p>
-<p>    initColors();</p>
-<p>    updateModeButtons();</p>
-<p>&amp;lt;/script&amp;gt;</p>
-<p>```</p>
-<br/>
-<p>&amp;lt;/body&amp;gt;</p>
-<p>&amp;lt;/html&amp;gt;</p>
+    <div class="top-panel">
+        <div>
+            <h1>Unique's Tracker for MakeCode</h1>
+            <div style="font-size: 11px; color: #999; margin-top: 2px;">v1.2.0</div>
+        </div>
+        <div class="top-actions">
+            <button id="instMgrBtn">Manage Instruments</button>
+            <label>Steps</label>
+            <input type="number" id="stepCount" value="16" min="1" max="256" style="width:70px">
+            <button id="setStepsBtn">Set</button>
+            <label>Beats/Measure</label>
+            <input type="number" id="beatsPerMeasure" value="4" min="1" max="16" style="width:70px">
+            <button id="saveBtn">Save</button>
+            <button id="loadBtn">Load</button>
+            <input type="text" id="songName" value="mySong" style="width:140px">
+            <button id="exportBtn">Export</button>
+        </div>
+    </div>
+
+```
+<div class="tracker-container">
+    <div class="tracker-grid" id="grid"></div>
+</div>
+
+<div class="bottom-controls">
+    <div class="left-controls">
+        <button id="playBtn">Play</button>
+        <button id="stopBtn">Stop</button>
+        <button id="drawBtn">Draw</button>
+        <button id="selectBtn">Select</button>
+        <button id="eraseBtn">Erase</button>
+        <button id="copyBtn" disabled>Copy</button>
+        <button id="pasteBtn" disabled>Paste</button>
+        <button id="clearBtn">Clear All</button>
+        <button id="demoBtn">Demo</button>
+        <button id="shortcutBtn">Shortcuts</button>
+    </div>
+    <div class="right-controls">
+        <label>BPM</label>
+        <input type="number" id="bpm" value="120" min="60" max="240" style="width:70px">
+        <label>Note Length</label>
+        <input type="number" id="noteLength" value="1" min="1" max="16" style="width:70px">
+        <label>Instrument</label>
+        <div class="instrument-list" id="instList"></div>
+        <button class="icon-btn" id="noteBtn">♪</button>
+    </div>
+</div>
+
+<div class="status-bar">
+    <div id="statusText">Ready</div>
+    <div id="selectionCount"></div>
+</div>
+
+<div class="note-popup" id="notePopup">
+    <div class="note-popup-header">
+        <h3>Select Note</h3>
+        <button class="close-btn" onclick="document.getElementById('notePopup').classList.remove('active')">&times;</button>
+    </div>
+    <div class="note-grid" id="noteGrid"></div>
+</div>
+
+<div class="modal" id="instMgrModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Manage Instruments</h2>
+            <button onclick="closeModal('instMgrModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <button onclick="openInstEditor(null)" style="width:100%; margin-bottom:16px">+ Create New Instrument</button>
+            <div id="instMgrList"></div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('instMgrModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="instModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="instModalTitle">Instrument Editor</h2>
+            <button onclick="closeModal('instModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="iName">
+            </div>
+            <div class="form-group">
+                <label>Wave</label>
+                <select id="iWave">
+                    <option>Sine</option>
+                    <option>Square</option>
+                    <option>Sawtooth</option>
+                    <option>Triangle</option>
+                    <option>Noise</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Frequency Mode</label>
+                <select id="iFreqMode">
+                    <option value="relative">Relative (follows note pitch)</option>
+                    <option value="fixed">Fixed frequency</option>
+                </select>
+            </div>
+            <div class="form-group" id="freqGroup">
+                <label>Start Freq (Hz)</label>
+                <input type="range" id="iStart" min="50" max="2000" value="440" oninput="updateVal('start')">
+                <div class="range-val" id="startVal">440</div>
+            </div>
+            <div class="form-group" id="freqEndGroup">
+                <label>End Freq (Hz)</label>
+                <input type="range" id="iEnd" min="50" max="2000" value="440" oninput="updateVal('end')">
+                <div class="range-val" id="endVal">440</div>
+            </div>
+            <div class="form-group">
+                <label>Start Volume (0-255)</label>
+                <input type="range" id="iStartVol" min="0" max="255" value="255" oninput="updateVal('startVol')">
+                <div class="range-val" id="startVolVal">255</div>
+            </div>
+            <div class="form-group">
+                <label>End Volume (0-255)</label>
+                <input type="range" id="iEndVol" min="0" max="255" value="0" oninput="updateVal('endVol')">
+                <div class="range-val" id="endVolVal">0</div>
+            </div>
+            <div class="form-group">
+                <label>Effect</label>
+                <select id="iEffect">
+                    <option>None</option>
+                    <option>Vibrato</option>
+                    <option>Tremolo</option>
+                    <option>Warble</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <div class="color-grid" id="colors"></div>
+            </div>
+            <button onclick="preview()" style="width:100%">Preview</button>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('instModal')">Cancel</button>
+            <button onclick="saveInst()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="exportModal">
+    <div class="modal-content" style="max-width:800px">
+        <div class="modal-header">
+            <h2>Export Code</h2>
+            <button onclick="closeModal('exportModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom:16px;padding:12px;background:#1a1a1a;border-radius:6px;border:1px solid #2a2a2a;">
+                <div style="margin-bottom:12px;font-size:13px;color:#999;">
+                    <strong>Quick Add to Extension:</strong><br>
+                    Paste your existing utmMusic extension code below and click "Merge" to automatically add this song.
+                </div>
+                <textarea id="existingExtension" placeholder="Paste your existing main.ts content here..." style="width:100%;height:120px;background:#242424;color:#e8e8e8;border:1px solid #3a3a3a;padding:12px;border-radius:4px;font-family:monospace;font-size:12px;resize:vertical;"></textarea>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button onclick="mergeExtension()" style="flex:1;">Merge Song Into Extension</button>
+                    <button onclick="document.getElementById('existingExtension').value=''" style="background:#3a2a2a;">Clear</button>
+                </div>
+            </div>
+            <div style="margin-bottom:8px;font-size:13px;color:#999;">
+                Manual instructions (if not using auto-merge):
+            </div>
+            <div class="code-output" id="code"></div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="copyCode()">Copy Instructions</button>
+            <button onclick="closeModal('exportModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="shortcutModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Keyboard Shortcuts</h2>
+            <button onclick="closeModal('shortcutModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 24px;font-size:13px;">
+                <strong>Space</strong><span>Play/Stop</span>
+                <strong>S</strong><span>Select Mode</span>
+                <strong>E</strong><span>Erase Mode</span>
+                <strong>D</strong><span>Draw Mode</span>
+                <strong>Ctrl/Cmd + C</strong><span>Copy Selection</span>
+                <strong>Ctrl/Cmd + V</strong><span>Paste (drag to position)</span>
+                <strong>Ctrl/Cmd + X</strong><span>Cut Selection</span>
+                <strong>Delete</strong><span>Clear Selection</span>
+                <strong>Escape</strong><span>Cancel Paste / Clear Selection</span>
+                <strong>Enter</strong><span>Confirm Paste</span>
+                <strong>Mouse Drag</strong><span>Move Selection / Paste Preview</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeModal('shortcutModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = new AudioContext();
+    const CHANNELS = 6;
+    let ROWS = 16;
+    let beatsPerMeasure = 4;
+    
+    // Initialize pattern properly without using fill
+    let pattern = [];
+    for (let i = 0; i < ROWS; i++) {
+        pattern.push([null, null, null, null, null, null]);
+    }
+    
+    let playing = false, row = 0, timer = null, oscs = [];
+    let selInst = 'square', selNote = 'C4';
+    let noteMode = 'piano';
+    let eraseMode = false;
+    let selectMode = false;
+    let drawMode = true;
+    let editingInstId = null;
+    let playingCells = [];
+    let selNoteLength = 1;
+    let selectedCells = new Set();
+    let copiedNotes = [];
+    let pasteMode = false;
+    let pasteOffset = {row: 0, col: 0};
+    let pastePreviewCells = [];
+    let dragStart = null;
+    let isDraggingNotes = false;
+    let draggedNotes = [];
+    let dragOrigin = null;
+    let copiedOrigin = null;
+    
+    const notes = {
+        'C4':262,'C#4':277,'D4':294,'D#4':311,'E4':330,'F4':349,'F#4':370,'G4':392,'G#4':415,'A4':440,'A#4':466,'B4':494,
+        'C5':523,'C#5':554,'D5':587,'D#5':622,'E5':659,'F5':698,'F#5':740,'G5':784,'G#5':831,'A5':880,'A#5':932,'B5':988,
+        'C3':131,'C#3':139,'D3':147,'D#3':156,'E3':165,'F3':175,'F#3':185,'G3':196,'G#3':208,'A3':220,'A#3':233,'B3':247,
+        'C6':1047,'C#6':1109,'D6':1175,'D#6':1245,'E6':1319,'F6':1397,'F#6':1480,'G6':1568,'G#6':1661,'A6':1760,'A#6':1865,'B6':1976,
+        'C2':65,'C#2':69,'D2':73,'D#2':78,'E2':82,'F2':87,'F#2':92,'G2':98,'G#2':104,'A2':110,'A#2':117,'B2':123,
+        'C1':33,'C#1':35,'D1':37,'D#1':39,'E1':41,'F1':44,'F#1':46,'G1':49,'G#1':52,'A1':55,'A#1':58,'B1':62
+    };
+    
+    const freqOptions = [100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1200,1500,2000];
+    
+    let insts = {
+        sine:{name:'Sine',wave:'sine',color:'#1a3a4a',text:'#6ab4d4',freqMode:'relative'},
+        square:{name:'Square',wave:'square',color:'#3a2a4a',text:'#b47ad4',freqMode:'relative'},
+        sawtooth:{name:'Saw',wave:'sawtooth',color:'#4a3a2a',text:'#d49a6a',freqMode:'relative'},
+        triangle:{name:'Tri',wave:'triangle',color:'#2a4a3a',text:'#7ad4a4',freqMode:'relative'},
+        noise:{name:'Noise',wave:'noise',color:'#3a3a3a',text:'#aaa',freqMode:'relative'}
+    };
+    
+    const colors = ['#1a3a4a','#3a2a4a','#4a3a2a','#2a4a3a','#3a3a3a','#4a1a2a','#2a1a4a','#1a4a4a','#4a4a1a','#2a4a1a'];
+    
+    function updateVal(t) {
+        const map = {start:'iStart',end:'iEnd',startVol:'iStartVol',endVol:'iEndVol'};
+        document.getElementById(t+'Val').textContent = document.getElementById(map[t]).value;
+    }
+    
+    function initInsts() {
+        const list = document.getElementById('instList');
+        list.innerHTML = '';
+        Object.keys(insts).forEach(k => {
+            const i = insts[k];
+            const c = document.createElement('div');
+            c.className = 'inst-chip'+(selInst===k?' selected':'');
+            c.textContent = i.name;
+            c.style.backgroundColor = i.color;
+            c.style.borderColor = i.text;
+            c.style.color = i.text;
+            c.onclick = () => { selInst = k; initInsts(); };
+            list.appendChild(c);
+        });
+    }
+    
+    function initInstMgr() {
+        const list = document.getElementById('instMgrList');
+        list.innerHTML = '';
+        Object.keys(insts).forEach(k => {
+            const i = insts[k];
+            const item = document.createElement('div');
+            item.className = 'inst-list-item';
+            item.style.borderLeft = `4px solid ${i.color}`;
+            
+            const info = document.createElement('div');
+            info.innerHTML = `<strong>${i.name}</strong><br><small>${i.wave} | ${i.effect || 'No effect'} | ${i.freqMode || 'relative'}</small>`;
+            
+            const actions = document.createElement('div');
+            actions.className = 'inst-actions';
+            
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.onclick = () => openInstEditor(k);
+            
+            actions.appendChild(editBtn);
+            
+            if (i.custom) {
+                const delBtn = document.createElement('button');
+                delBtn.textContent = 'Delete';
+                delBtn.style.background = '#4a2a2a';
+                delBtn.onclick = () => deleteInst(k);
+                actions.appendChild(delBtn);
+            }
+            
+            item.appendChild(info);
+            item.appendChild(actions);
+            list.appendChild(item);
+        });
+    }
+    
+    function openInstEditor(id) {
+        editingInstId = id;
+        const isEdit = id !== null;
+        document.getElementById('instModalTitle').textContent = isEdit ? 'Edit Instrument' : 'Create Instrument';
+        
+        if (isEdit) {
+            const inst = insts[id];
+            document.getElementById('iName').value = inst.name;
+            document.getElementById('iWave').value = inst.wave.charAt(0).toUpperCase() + inst.wave.slice(1);
+            document.getElementById('iFreqMode').value = inst.freqMode || 'relative';
+            document.getElementById('iStart').value = inst.startFreq || 440;
+            document.getElementById('iEnd').value = inst.endFreq || 440;
+            document.getElementById('iStartVol').value = inst.startVol !== undefined ? inst.startVol : 255;
+            document.getElementById('iEndVol').value = inst.endVol !== undefined ? inst.endVol : 0;
+            document.getElementById('iEffect').value = inst.effect || 'None';
+            updateVal('start');
+            updateVal('end');
+            updateVal('startVol');
+            updateVal('endVol');
+        } else {
+            document.getElementById('iName').value = '';
+            document.getElementById('iWave').value = 'Square';
+            document.getElementById('iFreqMode').value = 'relative';
+            document.getElementById('iStart').value = 440;
+            document.getElementById('iEnd').value = 440;
+            document.getElementById('iStartVol').value = 255;
+            document.getElementById('iEndVol').value = 0;
+            document.getElementById('iEffect').value = 'None';
+            updateVal('start');
+            updateVal('end');
+            updateVal('startVol');
+            updateVal('endVol');
+        }
+        
+        updateFreqGroups();
+        closeModal('instMgrModal');
+        openModal('instModal');
+    }
+    
+    function updateFreqGroups() {
+        const mode = document.getElementById('iFreqMode').value;
+        document.getElementById('freqGroup').style.display = mode === 'fixed' ? 'block' : 'none';
+        document.getElementById('freqEndGroup').style.display = mode === 'fixed' ? 'block' : 'none';
+    }
+    
+    document.getElementById('iFreqMode').addEventListener('change', updateFreqGroups);
+    
+    function deleteInst(id) {
+        if (!confirm('Delete this instrument?')) return;
+        delete insts[id];
+        if (selInst === id) selInst = 'square';
+        pattern.forEach(row => row.forEach((cell, i) => {
+            if (cell && cell.inst === id) row[i] = null;
+        }));
+        initInstMgr();
+        initInsts();
+        initGrid();
+    }
+    
+    function setSteps() {
+        const newRows = parseInt(document.getElementById('stepCount').value);
+        
+        if (isNaN(newRows) || newRows < 1 || newRows > 256) {
+            alert('Steps must be between 1 and 256');
+            document.getElementById('stepCount').value = ROWS;
+            return;
+        }
+        
+        if (newRows === ROWS) {
+            return;
+        }
+        
+        // Create entirely new array
+        const newPattern = [];
+        for (let i = 0; i < newRows; i++) {
+            newPattern.push([null, null, null, null, null, null]);
+        }
+        
+        // Copy over existing data
+        for (let i = 0; i < Math.min(ROWS, newRows); i++) {
+            for (let j = 0; j < CHANNELS; j++) {
+                newPattern[i][j] = pattern[i][j];
+            }
+        }
+        
+        pattern = newPattern;
+        ROWS = newRows;
+        initGrid();
+    }
+    
+    function initGrid() {
+        const g = document.getElementById('grid');
+        g.innerHTML = '<div class="header-cell">Step</div>';
+        for (let i = 1; i <= CHANNELS; i++) {
+            g.innerHTML += `<div class="header-cell">CH${i}</div>`;
+        }
+        
+        for (let r = 0; r < ROWS; r++) {
+            const s = document.createElement('div');
+            s.className = 'step-number';
+            if (r % beatsPerMeasure === 0) {
+                s.classList.add('measure-start');
+            }
+            s.textContent = (r+1).toString().padStart(2,'0');
+            g.appendChild(s);
+            
+            for (let c = 0; c < CHANNELS; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'note-cell';
+                cell.dataset.row = r;
+                cell.dataset.col = c;
+                const n = pattern[r][c];
+                if (n) {
+                    const i = insts[n.inst] || insts['square'];
+                    const noteDisplay = typeof n.note === 'number' ? n.note+'Hz' : n.note;
+                    const lengthDisplay = n.length > 1 ? ` (${n.length})` : '';
+                    cell.textContent = noteDisplay+lengthDisplay+'\n'+i.name;
+                    cell.classList.add('active');
+                    cell.style.backgroundColor = i.color;
+                    cell.style.borderColor = i.text;
+                    cell.style.color = i.text;
+                } else {
+                    cell.textContent = '---';
+                }
+                
+                cell.onmousedown = (e) => handleCellMouseDown(e, r, c);
+                cell.onmouseenter = (e) => handleCellMouseEnter(e, r, c);
+                cell.onmouseup = () => handleCellMouseUp();
+                
+                g.appendChild(cell);
+            }
+        }
+        
+        // If in paste mode, update the preview
+        if (pasteMode) {
+            updatePastePreview();
+        }
+    }
+    
+    function handleCellMouseDown(e, r, c) {
+        const key = `${r},${c}`;
+        
+        // Paste mode doesn't respond to clicks
+        if (pasteMode) {
+            return;
+        }
+        
+        if (selectMode) {
+            // If clicking on an already selected cell, start dragging those notes
+            if (selectedCells.has(key)) {
+                isDraggingNotes = true;
+                dragOrigin = {row: r, col: c};
+                
+                // Store the selected notes for dragging
+                draggedNotes = Array.from(selectedCells).map(cellKey => {
+                    const [row, col] = cellKey.split(',').map(Number);
+                    return {
+                        row: row,
+                        col: col,
+                        note: pattern[row][col] ? {...pattern[row][col]} : null
+                    };
+                }).filter(n => n.note);
+                
+                // Calculate relative positions
+                const minRow = Math.min(...draggedNotes.map(n => n.row));
+                const minCol = Math.min(...draggedNotes.map(n => n.col));
+                draggedNotes = draggedNotes.map(n => ({
+                    ...n,
+                    relRow: n.row - minRow,
+                    relCol: n.col - minCol
+                }));
+            } else {
+                // Starting a new selection
+                if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                    selectedCells.clear();
+                }
+                dragStart = {row: r, col: c};
+                if (selectedCells.has(key)) {
+                    selectedCells.delete(key);
+                } else {
+                    selectedCells.add(key);
+                }
+                updateSelection();
+            }
+        } else if (eraseMode) {
+            pattern[r][c] = null;
+            initGrid();
+        } else if (selNote && selInst) {
+            pattern[r][c] = {note:selNote,inst:selInst,length:selNoteLength};
+            const i = insts[selInst];
+            const baseFreq = typeof selNote === 'number' ? selNote : notes[selNote];
+            playNotePreview(baseFreq, i);
+            initGrid();
+        }
+    }
+    
+    function handleCellMouseEnter(e, r, c) {
+        // In paste mode, just update position on hover (no buttons needed)
+        if (pasteMode) {
+            pasteOffset = {row: r, col: c};
+            updatePastePreview();
+            return;
+        }
+        
+        if (isDraggingNotes && e.buttons === 1 && !pasteMode) {
+            // Update drag preview
+            updateDragPreview(r, c);
+        } else if (dragStart && selectMode && e.buttons === 1 && !isDraggingNotes) {
+            // Normal selection box drag
+            const minR = Math.min(dragStart.row, r);
+            const maxR = Math.max(dragStart.row, r);
+            const minC = Math.min(dragStart.col, c);
+            const maxC = Math.max(dragStart.col, c);
+            
+            selectedCells.clear();
+            for (let i = minR; i <= maxR; i++) {
+                for (let j = minC; j <= maxC; j++) {
+                    selectedCells.add(`${i},${j}`);
+                }
+            }
+            updateSelection();
+        }
+    }
+    
+    function handleCellMouseUp() {
+        if (isDraggingNotes && !pasteMode) {
+            // Place the dragged notes
+            placeDraggedNotes();
+        }
+        dragStart = null;
+        if (!pasteMode) {
+            isDraggingNotes = false;
+        }
+    }
+    
+    function updateDragPreview(targetRow, targetCol) {
+        // Clear previous preview
+        document.querySelectorAll('.note-cell').forEach(cell => {
+            cell.classList.remove('drag-preview');
+        });
+        
+        // Show new preview
+        draggedNotes.forEach(({relRow, relCol}) => {
+            const newRow = targetRow + relRow;
+            const newCol = targetCol + relCol;
+            if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < CHANNELS) {
+                const cell = document.querySelector(`.note-cell[data-row="${newRow}"][data-col="${newCol}"]`);
+                if (cell) {
+                    cell.classList.add('drag-preview');
+                }
+            }
+        });
+    }
+    
+    function placeDraggedNotes() {
+        // Find the current position from the drag preview
+        const previewCells = document.querySelectorAll('.note-cell.drag-preview');
+        if (previewCells.length === 0) return;
+        
+        // Get the target position from first preview cell
+        const firstPreview = previewCells[0];
+        const targetRow = parseInt(firstPreview.dataset.row);
+        const targetCol = parseInt(firstPreview.dataset.col);
+        
+        // Clear original positions
+        draggedNotes.forEach(({row, col}) => {
+            pattern[row][col] = null;
+        });
+        
+        // Place notes at new positions
+        draggedNotes.forEach(({note, relRow, relCol}) => {
+            const newRow = targetRow + relRow;
+            const newCol = targetCol + relCol;
+            if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < CHANNELS) {
+                pattern[newRow][newCol] = note ? {...note} : null;
+            }
+        });
+        
+        // Update selection to new positions
+        selectedCells.clear();
+        draggedNotes.forEach(({relRow, relCol}) => {
+            const newRow = targetRow + relRow;
+            const newCol = targetCol + relCol;
+            if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < CHANNELS) {
+                selectedCells.add(`${newRow},${newCol}`);
+            }
+        });
+        
+        draggedNotes = [];
+        initGrid();
+    }
+    
+    function updateSelection() {
+        document.querySelectorAll('.note-cell').forEach(cell => {
+            const key = `${cell.dataset.row},${cell.dataset.col}`;
+            if (selectedCells.has(key)) {
+                cell.classList.add('selected');
+            } else {
+                cell.classList.remove('selected');
+            }
+        });
+        document.getElementById('copyBtn').disabled = selectedCells.size === 0;
+        updateStatusBar();
+    }
+    
+    function updateStatusBar() {
+        const statusText = document.getElementById('statusText');
+        const selectionCount = document.getElementById('selectionCount');
+        
+        if (playing) {
+            statusText.textContent = 'Playing';
+        } else if (pasteMode) {
+            statusText.textContent = 'Pasting (enter to place notes)';
+        } else if (isDraggingNotes) {
+            statusText.textContent = 'Dragging';
+        } else if (selectMode) {
+            statusText.textContent = 'Selecting';
+        } else if (eraseMode) {
+            statusText.textContent = 'Erasing';
+        } else if (drawMode) {
+            statusText.textContent = 'Drawing';
+        } else {
+            statusText.textContent = 'Ready';
+        }
+        
+        if (selectedCells.size > 0) {
+            selectionCount.textContent = `${selectedCells.size} note${selectedCells.size === 1 ? '' : 's'} selected`;
+        } else {
+            selectionCount.textContent = '';
+        }
+    }
+    
+    function copySelection() {
+        if (selectedCells.size === 0) return;
+        
+        const cells = Array.from(selectedCells).map(key => {
+            const [r, c] = key.split(',').map(Number);
+            return {row: r, col: c, note: pattern[r][c]};
+        });
+        
+        const minRow = Math.min(...cells.map(c => c.row));
+        const minCol = Math.min(...cells.map(c => c.col));
+        
+        copiedOrigin = {row: minRow, col: minCol};
+        
+        copiedNotes = cells.map(c => ({
+            row: c.row - minRow,
+            col: c.col - minCol,
+            note: c.note ? JSON.parse(JSON.stringify(c.note)) : null
+        })).filter(c => c.note);
+        
+        document.getElementById('pasteBtn').disabled = false;
+        updateStatusBar();
+    }
+    
+    function cutSelection() {
+        copySelection();
+        selectedCells.forEach(key => {
+            const [r, c] = key.split(',').map(Number);
+            pattern[r][c] = null;
+        });
+        selectedCells.clear();
+        initGrid();
+    }
+    
+    function deleteSelection() {
+        selectedCells.forEach(key => {
+            const [r, c] = key.split(',').map(Number);
+            pattern[r][c] = null;
+        });
+        selectedCells.clear();
+        initGrid();
+    }
+    
+    function startPaste() {
+        if (copiedNotes.length === 0) return;
+        
+        selectMode = true;
+        drawMode = false;
+        eraseMode = false;
+        pasteMode = true;
+        
+        if (copiedOrigin) {
+            pasteOffset = {row: copiedOrigin.row, col: copiedOrigin.col};
+        } else {
+            pasteOffset = {row: 0, col: 0};
+        }
+        
+        selectedCells.clear();
+        updateModeButtons();
+        updateSelection();
+        initGrid();
+    }
+    
+    function updatePastePreview() {
+        // Clear previous preview
+        document.querySelectorAll('.note-cell').forEach(cell => {
+            cell.classList.remove('paste-preview');
+        });
+        
+        if (!pasteMode) return;
+        
+        // Store preview cells for later
+        pastePreviewCells = [];
+        
+        copiedNotes.forEach(({row, col, note}) => {
+            const targetRow = row + pasteOffset.row;
+            const targetCol = col + pasteOffset.col;
+            if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < CHANNELS) {
+                const cell = document.querySelector(`.note-cell[data-row="${targetRow}"][data-col="${targetCol}"]`);
+                if (cell && note) {
+                    cell.classList.add('paste-preview');
+                    // Don't show note content, just green dotted outline
+                    pastePreviewCells.push({row: targetRow, col: targetCol, note: {...note}});
+                }
+            }
+        });
+    }
+    
+    function movePaste(dr, dc) {
+        if (!pasteMode) return;
+        pasteOffset.row += dr;
+        pasteOffset.col += dc;
+        
+        pasteOffset.row = Math.max(0, Math.min(ROWS - 1, pasteOffset.row));
+        pasteOffset.col = Math.max(0, Math.min(CHANNELS - 1, pasteOffset.col));
+        
+        initGrid();
+    }
+    
+    function placePastedNotes() {
+        if (!pasteMode) return;
+        
+        copiedNotes.forEach(({row, col, note}) => {
+            const targetRow = row + pasteOffset.row;
+            const targetCol = col + pasteOffset.col;
+            if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < CHANNELS && note) {
+                pattern[targetRow][targetCol] = JSON.parse(JSON.stringify(note));
+            }
+        });
+        
+        selectedCells.clear();
+        copiedNotes.forEach(({row, col}) => {
+            const targetRow = row + pasteOffset.row;
+            const targetCol = col + pasteOffset.col;
+            if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < CHANNELS) {
+                selectedCells.add(`${targetRow},${targetCol}`);
+            }
+        });
+        
+        pasteMode = false;
+        initGrid();
+    }
+    
+    function cancelPaste() {
+        pasteMode = false;
+        initGrid();
+    }
+    
+    function updateModeButtons() {
+        document.getElementById('drawBtn').classList.toggle('active', drawMode);
+        document.getElementById('selectBtn').classList.toggle('active', selectMode);
+        document.getElementById('eraseBtn').classList.toggle('active', eraseMode);
+        document.getElementById('playBtn').classList.toggle('active', playing);
+        updateStatusBar();
+    }
+    
+    function initNotes() {
+        const g = document.getElementById('noteGrid');
+        g.innerHTML = '';
+        
+        const modeSwitch = document.createElement('div');
+        modeSwitch.style.cssText = 'grid-column:1/-1;padding:12px;text-align:center;background:#1a1a1a;border-radius:4px;margin-bottom:8px;display:flex;gap:8px;justify-content:center';
+        
+        const pianoBtn = document.createElement('button');
+        pianoBtn.textContent = 'Piano Notes';
+        pianoBtn.style.flex = '1';
+        pianoBtn.onclick = (e) => { 
+            e.stopPropagation();
+            noteMode = 'piano'; 
+            initNotes(); 
+        };
+        if (noteMode === 'piano') pianoBtn.style.background = '#3a3a3a';
+        
+        const freqBtn = document.createElement('button');
+        freqBtn.textContent = 'Frequency';
+        freqBtn.style.flex = '1';
+        freqBtn.onclick = (e) => { 
+            e.stopPropagation();
+            noteMode = 'freq'; 
+            initNotes(); 
+        };
+        if (noteMode === 'freq') freqBtn.style.background = '#3a3a3a';
+        
+        modeSwitch.appendChild(pianoBtn);
+        modeSwitch.appendChild(freqBtn);
+        g.appendChild(modeSwitch);
+        
+        const noteList = noteMode === 'piano' ? Object.keys(notes) : freqOptions;
+        
+        noteList.forEach(n => {
+            const d = document.createElement('div');
+            d.className = 'note-item';
+            d.textContent = noteMode === 'piano' ? n : n+'Hz';
+            d.onclick = (e) => { 
+                e.stopPropagation();
+                selNote = n;
+                eraseMode = false;
+                const i = insts[selInst];
+                const baseFreq = typeof n === 'number' ? n : notes[n];
+                playNotePreview(baseFreq, i);
+            };
+            g.appendChild(d);
+        });
+    }
+    
+    function initColors() {
+        const g = document.getElementById('colors');
+        g.innerHTML = '';
+        colors.forEach(c => {
+            const d = document.createElement('div');
+            d.className = 'color-box';
+            d.style.backgroundColor = c;
+            d.onclick = () => {
+                document.querySelectorAll('.color-box').forEach(e=>e.classList.remove('selected'));
+                d.classList.add('selected');
+            };
+            g.appendChild(d);
+        });
+        g.firstChild.classList.add('selected');
+    }
+    
+    function playNotePreview(baseFreq, inst) {
+        const freqMode = inst.freqMode || 'relative';
+        let startFreq, endFreq;
+        
+        if (freqMode === 'fixed') {
+            startFreq = inst.startFreq || 440;
+            endFreq = inst.endFreq || 440;
+        } else {
+            startFreq = baseFreq;
+            endFreq = baseFreq;
+        }
+        
+        playNote(startFreq, inst.wave, 0.3, startFreq, endFreq, inst.effect, inst.startVol, inst.endVol);
+    }
+    
+    function playNote(freq, wave, dur, startFreq, endFreq, effect, startVol, endVol) {
+        const g = ctx.createGain();
+        g.connect(ctx.destination);
+        
+        const sVol = (startVol !== undefined ? startVol : 255) / 255 * 0.3;
+        const eVol = (endVol !== undefined ? endVol : 0) / 255 * 0.3;
+        
+        g.gain.setValueAtTime(sVol, ctx.currentTime);
+        if (eVol > 0.001) {
+            g.gain.linearRampToValueAtTime(eVol, ctx.currentTime+dur);
+        } else {
+            g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+dur);
+        }
+        
+        if (wave === 'noise') {
+            const buf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < data.length; i++) data[i] = Math.random()*2-1;
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            src.connect(g);
+            src.start();
+            src.stop(ctx.currentTime+dur);
+            oscs.push(src);
+        } else {
+            const osc = ctx.createOscillator();
+            osc.type = wave;
+            
+            const start = startFreq || freq;
+            const end = endFreq || freq;
+            
+            osc.frequency.setValueAtTime(start, ctx.currentTime);
+            if (start !== end) {
+                osc.frequency.linearRampToValueAtTime(end, ctx.currentTime+dur);
+            }
+            
+            if (effect === 'Vibrato') {
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.type = 'sine';
+                lfo.frequency.value = 6;
+                lfoGain.gain.value = 20;
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(ctx.currentTime);
+                lfo.stop(ctx.currentTime + dur + 0.1);
+                oscs.push(lfo);
+            } else if (effect === 'Tremolo') {
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.type = 'sine';
+                lfo.frequency.value = 7;
+                lfoGain.gain.value = 0.2;
+                lfo.connect(lfoGain);
+                lfoGain.connect(g.gain);
+                lfo.start(ctx.currentTime);
+                lfo.stop(ctx.currentTime + dur + 0.1);
+                oscs.push(lfo);
+            } else if (effect === 'Warble') {
+                const lfo = ctx.createOscillator();
+                const lfoGain = ctx.createGain();
+                lfo.type = 'sine';
+                lfo.frequency.value = 4;
+                lfoGain.gain.value = 30;
+                lfo.connect(lfoGain);
+                lfoGain.connect(osc.frequency);
+                lfo.start(ctx.currentTime);
+                lfo.stop(ctx.currentTime + dur + 0.1);
+                oscs.push(lfo);
+            }
+            
+            osc.connect(g);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime+dur);
+            oscs.push(osc);
+        }
+    }
+    
+    function playRow(r) {
+        playingCells.forEach(cell => cell.classList.remove('playing'));
+        playingCells = [];
+        
+        const bpm = parseInt(document.getElementById('bpm').value);
+        const stepDur = (60/bpm);
+        
+        for (let c = 0; c < CHANNELS; c++) {
+            const n = pattern[r][c];
+            if (n) {
+                const cell = document.querySelector(`.note-cell[data-row="${r}"][data-col="${c}"]`);
+                if (cell) {
+                    cell.classList.add('playing');
+                    playingCells.push(cell);
+                }
+                
+                const i = insts[n.inst] || insts['square'];
+                const baseFreq = typeof n.note === 'number' ? n.note : notes[n.note];
+                const noteLength = n.length || 1;
+                const dur = stepDur * noteLength * 0.9;
+                
+                let startFreq, endFreq;
+                const freqMode = i.freqMode || 'relative';
+                
+                if (freqMode === 'fixed') {
+                    startFreq = i.startFreq || 440;
+                    endFreq = i.endFreq || 440;
+                } else {
+                    startFreq = baseFreq;
+                    endFreq = baseFreq;
+                }
+                
+                playNote(startFreq, i.wave, dur, startFreq, endFreq, i.effect, i.startVol, i.endVol);
+            }
+        }
+    }
+    
+    function play() {
+        if (playing) return;
+        playing = true;
+        row = 0;
+        const bpm = parseInt(document.getElementById('bpm').value);
+        const msPerStep = (60/bpm)*1000;
+        playRow(row);
+        updateModeButtons();
+        timer = setInterval(() => {
+            row = (row+1)%ROWS;
+            playRow(row);
+        }, msPerStep);
+    }
+    
+    function stop() {
+        playing = false;
+        clearInterval(timer);
+        oscs.forEach(o => { try { o.stop(); } catch(e){} });
+        oscs = [];
+        playingCells.forEach(cell => cell.classList.remove('playing'));
+        playingCells = [];
+        updateModeButtons();
+    }
+    
+    function demo() {
+        // Cool Suspense Loop - 8 steps
+        ROWS = 8;
+        document.getElementById('stepCount').value = 8;
+        document.getElementById('bpm').value = 150;
+        beatsPerMeasure = 4;
+        document.getElementById('beatsPerMeasure').value = 4;
+        
+        // Create a completely new pattern array
+        pattern = [];
+        for (let i = 0; i < ROWS; i++) {
+            pattern.push([null, null, null, null, null, null]);
+        }
+        
+        // Recreate the instruments from the exported song
+        // Square wave melody (C4, C4, C4, C4, C4, C4, C4, C#4)
+        insts['melody'] = {
+            name:'Melody',wave:'square',color:'#4a1a1a',text:'#ff6666',
+            freqMode:'relative',
+            startVol:255,endVol:0,effect:'None',custom:true
+        };
+        
+        // Sine bass hits (50 Hz)
+        insts['sine_bass'] = {
+            name:'SineBass',wave:'sine',color:'#0a0a2a',text:'#6666ff',
+            freqMode:'fixed',startFreq:50,endFreq:50,
+            startVol:255,endVol:0,effect:'None',custom:true
+        };
+        
+        // Sawtooth bass (65 Hz and 69 Hz)
+        insts['saw_bass'] = {
+            name:'SawBass',wave:'sawtooth',color:'#1a2a1a',text:'#66ff66',
+            freqMode:'fixed',startFreq:65,endFreq:65,
+            startVol:255,endVol:0,effect:'None',custom:true
+        };
+        
+        insts['saw_bass2'] = {
+            name:'SawBass2',wave:'sawtooth',color:'#2a1a1a',text:'#66ff99',
+            freqMode:'fixed',startFreq:69,endFreq:69,
+            startVol:255,endVol:0,effect:'None',custom:true
+        };
+        
+        // Noise percussion
+        insts['perc'] = {
+            name:'Perc',wave:'noise',color:'#1a1a1a',text:'#aaaaaa',
+            freqMode:'relative',
+            startVol:255,endVol:0,effect:'None',custom:true
+        };
+        
+        // Step 1: C4 melody + 3x sine bass (50Hz) + saw bass (65Hz)
+        pattern[0][0] = {note:'C4',inst:'melody',length:1};
+        pattern[0][1] = {note:50,inst:'sine_bass',length:1};
+        pattern[0][2] = {note:50,inst:'sine_bass',length:1};
+        pattern[0][3] = {note:50,inst:'sine_bass',length:1};
+        pattern[0][4] = {note:65,inst:'saw_bass',length:1};
+        
+        // Step 2: Same as step 1
+        pattern[1][0] = {note:'C4',inst:'melody',length:1};
+        pattern[1][1] = {note:50,inst:'sine_bass',length:1};
+        pattern[1][2] = {note:50,inst:'sine_bass',length:1};
+        pattern[1][3] = {note:50,inst:'sine_bass',length:1};
+        pattern[1][4] = {note:65,inst:'saw_bass',length:1};
+        
+        // Step 3: C4 melody + noise percussion
+        pattern[2][0] = {note:'C4',inst:'melody',length:1};
+        pattern[2][1] = {note:'C4',inst:'perc',length:1};
+        
+        // Step 4: C4 melody + 2x saw bass (69Hz)
+        pattern[3][0] = {note:'C4',inst:'melody',length:1};
+        pattern[3][1] = {note:69,inst:'saw_bass2',length:1};
+        pattern[3][2] = {note:69,inst:'saw_bass2',length:1};
+        
+        // Step 5: Same as step 1
+        pattern[4][0] = {note:'C4',inst:'melody',length:1};
+        pattern[4][1] = {note:50,inst:'sine_bass',length:1};
+        pattern[4][2] = {note:50,inst:'sine_bass',length:1};
+        pattern[4][3] = {note:50,inst:'sine_bass',length:1};
+        pattern[4][4] = {note:65,inst:'saw_bass',length:1};
+        
+        // Step 6: C4 melody + noise percussion
+        pattern[5][0] = {note:'C4',inst:'melody',length:1};
+        pattern[5][1] = {note:'C4',inst:'perc',length:1};
+        
+        // Step 7: C4 melody + 2x saw bass (69Hz)
+        pattern[6][0] = {note:'C4',inst:'melody',length:1};
+        pattern[6][1] = {note:69,inst:'saw_bass2',length:1};
+        pattern[6][2] = {note:69,inst:'saw_bass2',length:1};
+        
+        // Step 8: C#4 melody only
+        pattern[7][0] = {note:'C#4',inst:'melody',length:1};
+        
+        initInsts();
+        initGrid();
+    }
+    
+    function preview() {
+        const f1 = parseInt(document.getElementById('iStart').value);
+        const f2 = parseInt(document.getElementById('iEnd').value);
+        const w = document.getElementById('iWave').value.toLowerCase();
+        const ef = document.getElementById('iEffect').value;
+        const sVol = parseInt(document.getElementById('iStartVol').value);
+        const eVol = parseInt(document.getElementById('iEndVol').value);
+        playNote(f1, w, 0.5, f1, f2, ef, sVol, eVol);
+    }
+    
+    function saveInst() {
+        const name = document.getElementById('iName').value || 'Custom';
+        const wave = document.getElementById('iWave').value.toLowerCase();
+        const freqMode = document.getElementById('iFreqMode').value;
+        const start = parseInt(document.getElementById('iStart').value);
+        const end = parseInt(document.getElementById('iEnd').value);
+        const effect = document.getElementById('iEffect').value;
+        const col = document.querySelector('.color-box.selected').style.backgroundColor;
+        const startVol = parseInt(document.getElementById('iStartVol').value);
+        const endVol = parseInt(document.getElementById('iEndVol').value);
+        
+        const id = editingInstId || 'custom_'+Date.now();
+        insts[id] = {
+            name,wave,color:col,text:'#e8e8e8',
+            freqMode,
+            startFreq: freqMode === 'fixed' ? start : undefined,
+            endFreq: freqMode === 'fixed' ? end : undefined,
+            effect,startVol,endVol,
+            custom: !editingInstId || insts[editingInstId]?.custom
+        };
+        
+        selInst = id;
+        initInsts();
+        closeModal('instModal');
+        openModal('instMgrModal');
+        initInstMgr();
+    }
+    
+    function exportCode() {
+        const name = document.getElementById('songName').value.replace(/[^a-zA-Z0-9_]/g,'') || 'mySong';
+        const bpm = parseInt(document.getElementById('bpm').value);
+        const STEP_MS = Math.round(60000/bpm);
+        
+        // Type definitions for internal use
+        const waveShapeMap = {
+            sine: 'WaveShape.Sine',
+            square: 'WaveShape.Square',
+            sawtooth: 'WaveShape.Sawtooth',
+            triangle: 'WaveShape.Triangle',
+            noise: 'WaveShape.Noise'
+        };
+        
+        const effectMap = {
+            None: 'SoundExpressionEffect.None',
+            Vibrato: 'SoundExpressionEffect.Vibrato',
+            Tremolo: 'SoundExpressionEffect.Tremolo',
+            Warble: 'SoundExpressionEffect.Warble'
+        };
+        
+        // Step 1: Build steps array from tracker grid
+        const steps = [];
+        for (let r = 0; r < ROWS; r++) {
+            const stepSfx = [];
+            for (let c = 0; c < CHANNELS; c++) {
+                const n = pattern[r][c];
+                if (n) {
+                    const i = insts[n.inst] || insts['square'];
+                    const baseFreq = typeof n.note === 'number' ? n.note : notes[n.note];
+                    
+                    let sf, ef;
+                    const freqMode = i.freqMode || 'relative';
+                    
+                    if (freqMode === 'fixed') {
+                        sf = i.startFreq || 440;
+                        ef = i.endFreq || 440;
+                    } else {
+                        sf = baseFreq;
+                        ef = baseFreq;
+                    }
+                    
+                    const sVol = i.startVol !== undefined ? i.startVol : 255;
+                    const eVol = i.endVol !== undefined ? i.endVol : 0;
+                    const dur = STEP_MS * (n.length || 1);
+                    
+                    stepSfx.push({
+                        wave: waveShapeMap[i.wave],
+                        sf: sf,
+                        ef: ef,
+                        sv: sVol,
+                        ev: eVol,
+                        dur: dur,
+                        fx: effectMap[i.effect || 'None'],
+                        curve: 'InterpolationCurve.Linear'
+                    });
+                }
+            }
+            steps.push(stepSfx);
+        }
+        
+        // Step 2: Deduplicate SFX into a table
+        const sfxMap = new Map();
+        const sfxList = [];
+        
+        function sfxKey(p) {
+            return `${p.wave}:${p.sf}:${p.ef}:${p.sv}:${p.ev}:${p.dur}:${p.fx}:${p.curve}`;
+        }
+        
+        function getSfxId(p) {
+            const key = sfxKey(p);
+            const existing = sfxMap.get(key);
+            if (existing !== undefined) return existing;
+            
+            const id = sfxList.length;
+            sfxList.push(p);
+            sfxMap.set(key, id);
+            return id;
+        }
+        
+        // Step 3: Build byte sequence for song data
+        const bytes = [];
+        for (const step of steps) {
+            const count = step.length;
+            bytes.push(count);
+            for (const p of step) {
+                const id = getSfxId(p);
+                bytes.push(id);
+            }
+        }
+        
+        // Step 4: Convert bytes to hex string
+        let hexStr = '';
+        for (let i = 0; i < bytes.length; i++) {
+            hexStr += bytes[i].toString(16).padStart(2, '0');
+            // Add space every 2 bytes for readability
+            if ((i + 1) % 16 === 0 && i < bytes.length - 1) {
+                hexStr += '\n            ';
+            } else if (i < bytes.length - 1) {
+                hexStr += ' ';
+            }
+        }
+        
+        // Step 5: Generate SFX table arrays
+        const sfxWave = sfxList.map(s => s.wave).join(', ');
+        const sfxStartFreq = sfxList.map(s => s.sf).join(', ');
+        const sfxEndFreq = sfxList.map(s => s.ef).join(', ');
+        const sfxStartVol = sfxList.map(s => s.sv).join(', ');
+        const sfxEndVol = sfxList.map(s => s.ev).join(', ');
+        const sfxDuration = sfxList.map(s => s.dur).join(', ');
+        const sfxEffect = sfxList.map(s => s.fx).join(', ');
+        const sfxCurve = sfxList.map(s => s.curve).join(', ');
+        
+        // Step 6: Generate song data structure for enum-based system
+        const code = `// Add this to your existing utmMusic extension
+```
+
+// 1. First, add this enum entry to your UTMSong enum:
+enum UTMSong {
+//% block=”${name}”
+${name.toUpperCase()}
+}
+
+// 2. Then add this case to the getSongData() function:
+case UTMSong.${name.toUpperCase()}:
+return {
+stepMs: ${STEP_MS},
+sfxWave: [${sfxWave}],
+sfxStartFreq: [${sfxStartFreq}],
+sfxEndFreq: [${sfxEndFreq}],
+sfxStartVol: [${sfxStartVol}],
+sfxEndVol: [${sfxEndVol}],
+sfxDuration: [${sfxDuration}],
+sfxEffect: [${sfxEffect}],
+sfxCurve: [${sfxCurve}],
+data: hex`
+${hexStr}
+`
+};
+
+// Stats for ${name}:
+// - Unique sound effects: ${sfxList.length}
+// - Total steps: ${ROWS}
+// - Song data size: ${bytes.length} bytes
+// - Compression ratio: ${Math.round((1 - bytes.length / (ROWS * CHANNELS * 50)) * 100)}% smaller than uncompressed
+
+// ============================================================
+// FULL EXTENSION STRUCTURE (for reference)
+// ============================================================
+// Copy this structure to your main.ts file in your MakeCode extension:
+/*
+//% color=”#ff0000” weight=100 icon=”\uf025” block=“UTMMusic”
+namespace utmMusic {
+
+```
+export enum UTMSong {
+    //% block="${name}"
+    ${name.toUpperCase()}
+    // Add more songs here...
+}
+
+interface SongData {
+    stepMs: number;
+    sfxWave: WaveShape[];
+    sfxStartFreq: number[];
+    sfxEndFreq: number[];
+    sfxStartVol: number[];
+    sfxEndVol: number[];
+    sfxDuration: number[];
+    sfxEffect: SoundExpressionEffect[];
+    sfxCurve: InterpolationCurve[];
+    data: Buffer;
+}
+
+function getSongData(song: UTMSong): SongData {
+    switch (song) {
+        case UTMSong.${name.toUpperCase()}:
+            return {
+                stepMs: ${STEP_MS},
+                sfxWave: [${sfxWave}],
+                sfxStartFreq: [${sfxStartFreq}],
+                sfxEndFreq: [${sfxEndFreq}],
+                sfxStartVol: [${sfxStartVol}],
+                sfxEndVol: [${sfxEndVol}],
+                sfxDuration: [${sfxDuration}],
+                sfxEffect: [${sfxEffect}],
+                sfxCurve: [${sfxCurve}],
+                data: hex\`
+                    ${hexStr}
+                \`
+            };
+        // Add more cases here...
+        default:
+            return null;
+    }
+}
+
+function playSfx(songData: SongData, id: number) {
+    const sfxCount = songData.sfxWave.length;
+    if (id < 0 || id >= sfxCount) return;
+    
+    music.play(
+        music.createSoundEffect(
+            songData.sfxWave[id],
+            songData.sfxStartFreq[id],
+            songData.sfxEndFreq[id],
+            songData.sfxStartVol[id],
+            songData.sfxEndVol[id],
+            songData.sfxDuration[id],
+            songData.sfxEffect[id],
+            songData.sfxCurve[id]
+        ),
+        music.PlaybackMode.InBackground
+    );
+}
+
+function playSongData(songData: SongData) {
+    let i = 0;
+    const data = songData.data;
+    while (i < data.length) {
+        const count = data[i++];
+        for (let j = 0; j < count; j++) {
+            const sfxId = data[i++];
+            playSfx(songData, sfxId);
+        }
+        pause(songData.stepMs);
+    }
+}
+
+//% blockId=play_utm_song
+//% block="play UTM song %song"
+//% song.defl=UTMSong.${name.toUpperCase()}
+export function playSong(song: UTMSong) {
+    const songData = getSongData(song);
+    if (songData) {
+        playSongData(songData);
+    }
+}
+
+//% blockId=play_utm_song_loop
+//% block="play UTM song %song in loop"
+//% song.defl=UTMSong.${name.toUpperCase()}
+export function playSongLoop(song: UTMSong) {
+    const songData = getSongData(song);
+    if (songData) {
+        forever(function () {
+            playSongData(songData);
+        });
+    }
+}
+```
+
+}
+*/`;
+
+```
+        document.getElementById('code').textContent = code;
+        openModal('exportModal');
+    }
+    
+    function copyCode() {
+        navigator.clipboard.writeText(document.getElementById('code').textContent);
+        alert('Instructions copied to clipboard!');
+    }
+    
+    function mergeExtension() {
+        const existingCode = document.getElementById('existingExtension').value.trim();
+        
+        if (!existingCode) {
+            alert('Please paste your existing extension code first!');
+            return;
+        }
+        
+        // Get the current song data
+        const name = document.getElementById('songName').value.replace(/[^a-zA-Z0-9_]/g,'') || 'mySong';
+        const songData = generateSongData();
+        
+        if (!songData) {
+            alert('Error generating song data!');
+            return;
+        }
+        
+        // Check if it's a valid extension
+        if (!existingCode.includes('namespace utmMusic') && !existingCode.includes('namespace UTMMusic')) {
+            alert('This doesn\'t look like a utmMusic extension. Make sure it contains "namespace utmMusic".');
+            return;
+        }
+        
+        let mergedCode = existingCode;
+        
+        // Step 1: Add enum entry
+        const enumEntry = `    //% block="${name}"\n    ${name.toUpperCase()},`;
+        
+        // Find the UTMSong enum and add the new song
+        const enumMatch = mergedCode.match(/(export\s+enum\s+UTMSong\s*\{)([\s\S]*?)(\n\s*\})/);
+        if (enumMatch) {
+            const existingEntries = enumMatch[2];
+            // Check if song already exists
+            if (existingEntries.includes(name.toUpperCase())) {
+                if (!confirm(`Song "${name}" already exists in the enum. Replace it?`)) {
+                    return;
+                }
+                // Remove existing entry (including comma)
+                const regex = new RegExp(`\\s*//.*\\n\\s*${name.toUpperCase()}[,]?`, 'g');
+                mergedCode = mergedCode.replace(regex, '');
+            }
+            // Add new entry before closing brace (with comma)
+            mergedCode = mergedCode.replace(
+                /(export\s+enum\s+UTMSong\s*\{[\s\S]*?)(\n\s*\})/,
+                `$1\n${enumEntry}$2`
+            );
+        } else {
+            alert('Could not find UTMSong enum. Make sure your extension has the enum defined.');
+            return;
+        }
+        
+        // Step 2: Add case to getSongData
+        const caseCode = `        case UTMSong.${name.toUpperCase()}:\n            return {\n                stepMs: ${songData.stepMs},\n                sfxWave: [${songData.sfxWave}],\n                sfxStartFreq: [${songData.sfxStartFreq}],\n                sfxEndFreq: [${songData.sfxEndFreq}],\n                sfxStartVol: [${songData.sfxStartVol}],\n                sfxEndVol: [${songData.sfxEndVol}],\n                sfxDuration: [${songData.sfxDuration}],\n                sfxEffect: [${songData.sfxEffect}],\n                sfxCurve: [${songData.sfxCurve}],\n                data: hex\`\n                    ${songData.hexStr}\n                \`\n            };`;
+        
+        // Find getSongData function and add case
+        const switchMatch = mergedCode.match(/(function\s+getSongData[\s\S]*?switch\s*\([^)]+\)\s*\{)([\s\S]*?)(default:[\s\S]*?\n\s*\})/);
+        if (switchMatch) {
+            // Check if case already exists and remove it
+            const caseRegex = new RegExp(`\\s*case\\s+UTMSong\\.${name.toUpperCase()}:[\\s\\S]*?(?=case\\s+|default:|\\n\\s*\\})`, 'g');
+            mergedCode = mergedCode.replace(caseRegex, '');
+            
+            // Add new case before default
+            mergedCode = mergedCode.replace(
+                /(function\s+getSongData[\s\S]*?switch\s*\([^)]+\)\s*\{[\s\S]*?)(default:)/,
+                `$1${caseCode}\n\n        $2`
+            );
+        } else {
+            alert('Could not find getSongData switch statement. Make sure your extension has this function.');
+            return;
+        }
+        
+        // Display the merged code
+        document.getElementById('code').textContent = mergedCode;
+        document.getElementById('existingExtension').value = '';
+        
+        alert(`Successfully merged song "${name}" into your extension!\n\nThe merged code is shown below. Copy it and replace your main.ts file.`);
+    }
+    
+    function generateSongData() {
+        const name = document.getElementById('songName').value.replace(/[^a-zA-Z0-9_]/g,'') || 'mySong';
+        const bpm = parseInt(document.getElementById('bpm').value);
+        const STEP_MS = Math.round(60000/bpm);
+        
+        const waveShapeMap = {
+            sine: 'WaveShape.Sine',
+            square: 'WaveShape.Square',
+            sawtooth: 'WaveShape.Sawtooth',
+            triangle: 'WaveShape.Triangle',
+            noise: 'WaveShape.Noise'
+        };
+        
+        const effectMap = {
+            None: 'SoundExpressionEffect.None',
+            Vibrato: 'SoundExpressionEffect.Vibrato',
+            Tremolo: 'SoundExpressionEffect.Tremolo',
+            Warble: 'SoundExpressionEffect.Warble'
+        };
+        
+        const steps = [];
+        for (let r = 0; r < ROWS; r++) {
+            const stepSfx = [];
+            for (let c = 0; c < CHANNELS; c++) {
+                const n = pattern[r][c];
+                if (n) {
+                    const i = insts[n.inst] || insts['square'];
+                    const baseFreq = typeof n.note === 'number' ? n.note : notes[n.note];
+                    
+                    let sf, ef;
+                    const freqMode = i.freqMode || 'relative';
+                    
+                    if (freqMode === 'fixed') {
+                        sf = i.startFreq || 440;
+                        ef = i.endFreq || 440;
+                    } else {
+                        sf = baseFreq;
+                        ef = baseFreq;
+                    }
+                    
+                    const sVol = i.startVol !== undefined ? i.startVol : 255;
+                    const eVol = i.endVol !== undefined ? i.endVol : 0;
+                    const dur = STEP_MS * (n.length || 1);
+                    
+                    stepSfx.push({
+                        wave: waveShapeMap[i.wave],
+                        sf: sf,
+                        ef: ef,
+                        sv: sVol,
+                        ev: eVol,
+                        dur: dur,
+                        fx: effectMap[i.effect || 'None'],
+                        curve: 'InterpolationCurve.Linear'
+                    });
+                }
+            }
+            steps.push(stepSfx);
+        }
+        
+        const sfxMap = new Map();
+        const sfxList = [];
+        
+        function sfxKey(p) {
+            return `${p.wave}:${p.sf}:${p.ef}:${p.sv}:${p.ev}:${p.dur}:${p.fx}:${p.curve}`;
+        }
+        
+        function getSfxId(p) {
+            const key = sfxKey(p);
+            const existing = sfxMap.get(key);
+            if (existing !== undefined) return existing;
+            
+            const id = sfxList.length;
+            sfxList.push(p);
+            sfxMap.set(key, id);
+            return id;
+        }
+        
+        const bytes = [];
+        for (const step of steps) {
+            const count = step.length;
+            bytes.push(count);
+            for (const p of step) {
+                const id = getSfxId(p);
+                bytes.push(id);
+            }
+        }
+        
+        let hexStr = '';
+        for (let i = 0; i < bytes.length; i++) {
+            hexStr += bytes[i].toString(16).padStart(2, '0');
+            if ((i + 1) % 16 === 0 && i < bytes.length - 1) {
+                hexStr += '\n                    ';
+            } else if (i < bytes.length - 1) {
+                hexStr += ' ';
+            }
+        }
+        
+        return {
+            stepMs: STEP_MS,
+            sfxWave: sfxList.map(s => s.wave).join(', '),
+            sfxStartFreq: sfxList.map(s => s.sf).join(', '),
+            sfxEndFreq: sfxList.map(s => s.ef).join(', '),
+            sfxStartVol: sfxList.map(s => s.sv).join(', '),
+            sfxEndVol: sfxList.map(s => s.ev).join(', '),
+            sfxDuration: sfxList.map(s => s.dur).join(', '),
+            sfxEffect: sfxList.map(s => s.fx).join(', '),
+            sfxCurve: sfxList.map(s => s.curve).join(', '),
+            hexStr: hexStr,
+            sfxCount: sfxList.length,
+            totalSteps: ROWS,
+            dataSize: bytes.length
+        };
+    }
+    
+    function saveSong() {
+        alert('Song saved!');
+    }
+    
+    function loadSong() {
+        alert('No saves found');
+    }
+    
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    
+    document.getElementById('noteBtn').onclick = e => {
+        const p = document.getElementById('notePopup');
+        p.classList.toggle('active');
+    };
+    
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#noteBtn') && !e.target.closest('#notePopup')) {
+            document.getElementById('notePopup').classList.remove('active');
+        }
+    });
+    
+    document.getElementById('playBtn').onclick = play;
+    document.getElementById('stopBtn').onclick = stop;
+    document.getElementById('drawBtn').onclick = () => {
+        drawMode = true;
+        selectMode = false;
+        eraseMode = false;
+        pasteMode = false;
+        updateModeButtons();
+    };
+    document.getElementById('selectBtn').onclick = () => {
+        selectMode = !selectMode;
+        if (selectMode) {
+            drawMode = false;
+            eraseMode = false;
+            pasteMode = false;
+        }
+        updateModeButtons();
+        initGrid();
+    };
+    document.getElementById('eraseBtn').onclick = () => { 
+        eraseMode = !eraseMode;
+        if (eraseMode) {
+            drawMode = false;
+            selectMode = false;
+            pasteMode = false;
+        }
+        updateModeButtons();
+        initGrid();
+    };
+    document.getElementById('copyBtn').onclick = copySelection;
+    document.getElementById('pasteBtn').onclick = startPaste;
+    document.getElementById('clearBtn').onclick = () => { 
+        if (confirm('Clear all notes?')) {
+            // Completely reset the pattern
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < CHANNELS; c++) {
+                    pattern[r][c] = null;
+                }
+            }
+            
+            // Reset all states
+            selectedCells.clear();
+            copiedNotes = [];
+            pasteMode = false;
+            isDraggingNotes = false;
+            pastePreviewCells = [];
+            draggedNotes = [];
+            dragStart = null;
+            dragOrigin = null;
+            
+            updateSelection();
+            updateStatusBar();
+            initGrid(); 
+        }
+    };
+    document.getElementById('demoBtn').onclick = demo;
+    document.getElementById('shortcutBtn').onclick = () => openModal('shortcutModal');
+    document.getElementById('setStepsBtn').onclick = setSteps;
+    document.getElementById('instMgrBtn').onclick = () => { openModal('instMgrModal'); initInstMgr(); };
+    document.getElementById('exportBtn').onclick = exportCode;
+    document.getElementById('saveBtn').onclick = saveSong;
+    document.getElementById('loadBtn').onclick = loadSong;
+    document.getElementById('noteLength').addEventListener('input', (e) => {
+        selNoteLength = parseInt(e.target.value) || 1;
+    });
+    document.getElementById('beatsPerMeasure').addEventListener('input', () => {
+        beatsPerMeasure = parseInt(document.getElementById('beatsPerMeasure').value) || 4;
+        initGrid();
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Don't trigger shortcuts when typing in input fields
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        
+        // Space - Play/Stop
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (playing) stop(); else play();
+        }
+        
+        // S - Select mode
+        if (e.code === 'KeyS' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            selectMode = !selectMode;
+            if (selectMode) { drawMode = false; eraseMode = false; pasteMode = false; }
+            updateModeButtons();
+            initGrid();
+        }
+        
+        // E - Erase mode
+        if (e.code === 'KeyE' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            eraseMode = !eraseMode;
+            if (eraseMode) { drawMode = false; selectMode = false; pasteMode = false; }
+            updateModeButtons();
+            initGrid();
+        }
+        
+        // D - Draw mode (disable other modes)
+        if (e.code === 'KeyD' && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            drawMode = true;
+            selectMode = false;
+            eraseMode = false;
+            pasteMode = false;
+            updateModeButtons();
+            initGrid();
+        }
+        
+        // Ctrl/Cmd + C - Copy
+        if ((e.ctrlKey || e.metaKey) && e.code === 'KeyC') {
+            e.preventDefault();
+            copySelection();
+        }
+        
+        // Ctrl/Cmd + V - Paste
+        if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV') {
+            e.preventDefault();
+            startPaste();
+        }
+        
+        // Ctrl/Cmd + X - Cut
+        if ((e.ctrlKey || e.metaKey) && e.code === 'KeyX') {
+            e.preventDefault();
+            cutSelection();
+        }
+        
+        // Delete - Clear selection
+        if (e.code === 'Delete' || e.code === 'Backspace') {
+            e.preventDefault();
+            if (selectedCells.size > 0) {
+                deleteSelection();
+            }
+        }
+        
+        // Escape - Clear selection or cancel paste
+        if (e.code === 'Escape') {
+            e.preventDefault();
+            if (pasteMode) {
+                cancelPaste();
+            } else {
+                selectedCells.clear();
+                updateSelection();
+            }
+        }
+        
+        // Enter - Place pasted notes
+        if (e.code === 'Enter' && pasteMode) {
+            e.preventDefault();
+            placePastedNotes();
+        }
+    });
+    
+    // Prevent text selection during drag
+    document.addEventListener('selectstart', (e) => {
+        if (dragStart) e.preventDefault();
+    });
+    
+    initInsts();
+    initGrid();
+    initNotes();
+    initColors();
+    updateModeButtons();
+</script>
+```
+
 </body>
 </html>
