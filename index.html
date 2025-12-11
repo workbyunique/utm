@@ -1377,14 +1377,30 @@
         }
         
         if (wave === 'noise') {
-            const buf = ctx.createBuffer(1, ctx.sampleRate*2, ctx.sampleRate);
+            const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
             const data = buf.getChannelData(0);
-            for (let i = 0; i < data.length; i++) data[i] = Math.random()*2-1;
+            for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        
             const src = ctx.createBufferSource();
             src.buffer = buf;
-            src.connect(g);
+        
+            // New: filter to give noise a perceivable "pitch"
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+
+            const start = startFreq || freq || 440;
+            const end   = endFreq   || freq || start;
+
+            filter.frequency.setValueAtTime(start, ctx.currentTime);
+            if (start !== end) {
+                filter.frequency.linearRampToValueAtTime(end, ctx.currentTime + dur);
+            }
+
+            src.connect(filter);
+            filter.connect(g);
+
             src.start();
-            src.stop(ctx.currentTime+dur);
+            src.stop(ctx.currentTime + dur);
             oscs.push(src);
         } else {
             const osc = ctx.createOscillator();
