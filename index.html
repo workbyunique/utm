@@ -521,14 +521,13 @@
                     <div style="
     height:40px;
     border-radius:0px;
-    overflow:hidden;
     display:flex;
     align-items:center;
     justify-content:center;
 ">
     <img src="https://i.ibb.co/rRG1QcXb/output-onlinepngtools.png" 
          alt="UTM Logo"
-         style="width:100%;height:100%;object-fit:cover;">
+         style="object-fit:contain;width:auto;height:40px;">
 </div>
                     <div>
                         <h2 style="margin:0;font-size:18px;">Welcome to UTM</h2>
@@ -1576,10 +1575,10 @@ namespace utmMusic {
         
         const sVol = (startVol !== undefined ? startVol : 255) / 255 * 0.3;
         const eVol = (endVol !== undefined ? endVol : 0) / 255 * 0.3;
-        
-        g.gain.setValueAtTime(sVol, ctx.currentTime);
+        // Noise needs way more gain to be audible
+        g.gain.setValueAtTime(sVol * 3, ctx.currentTime);
         if (eVol > 0.001) {
-            g.gain.linearRampToValueAtTime(eVol, ctx.currentTime+dur);
+            g.gain.linearRampToValueAtTime(eVol * 3, ctx.currentTime+dur);
         } else {
             g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+dur);
         }
