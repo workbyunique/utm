@@ -512,11 +512,177 @@
 
 
 </head>
+  
 <body>
+    <div class="modal active" id="welcomeModal">
+        <div class="modal-content" style="max-width:520px">
+            <div class="modal-header">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="
+    height:40px;
+    border-radius:0px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+">
+    <img src="https://i.ibb.co/rRG1QcXb/output-onlinepngtools.png" 
+         alt="UTM Logo"
+         style="width:100%;height:100%;object-fit:cover;">
+</div>
+                    <div>
+                        <h2 style="margin:0;font-size:18px;">Welcome to UTM</h2>
+                        <div style="font-size:12px;color:#aaa;margin-top:2px;">Unique&apos;s Tracker for MakeCode Arcade</div>
+                    </div>
+                </div>
+                <button onclick="closeModal('welcomeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px;color:#ccc;margin-bottom:16px;">
+                    Choose how you want to get started. You can begin a fresh tracker project, open an existing <code>.utmf</code> file, or see how to wire the UTM extension into your MakeCode game.
+                </p>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+                    <button id="welcomeStartBtn" style="width:100%;">Start New Project</button>
+                    <button id="welcomeOpenBtn" style="width:100%;">Open Project (.utmf)</button>
+                    <button id="welcomeExtBtn" style="width:100%;background:#2a2a3a;border-color:#4a4a8a;">
+                        How to add the UTM extension to MakeCode
+                    </button>
+                </div>
+                <div id="welcomeInstructions" style="display:none;font-size:13px;color:#ccc;border-top:1px solid #2a2a2a;padding-top:12px;margin-top:4px;">
+                    <h3 style="font-size:14px;margin-bottom:8px;">Add the UTM extension to your MakeCode project</h3>
+                    <p><strong>Step 1:</strong><br>
+                    Paste this code into a <code>custom.ts</code> file within your project. This will create an editable UTM extension you can add songs to from the tracker.</p>
+                    <textarea readonly style="margin:8px 0 12px 0;width:100%;height:260px;background:#1a1a1a;color:#e8e8e8;border:1px solid #3a3a3a;border-radius:4px;font-family:monospace;font-size:11px;padding:8px;resize:vertical;">//% color="#ff0000" weight=100 icon="\uf025" block="UTM Music"
+namespace utmMusic {
+
+    // This enum starts empty. The tracker’s auto-merge will
+    // inject new entries like:
+    //
+    //   //% block="My Song"
+    //   MY_SONG,
+    //
+    export enum UTMSong {
+    //% block="newAgentSuspenceLoop"
+    NEWAGENTSUSPENCELOOP,
+    }
+
+    interface SongData {
+        stepMs: number;
+        sfxWave: WaveShape[];
+        sfxStartFreq: number[];
+        sfxEndFreq: number[];
+        sfxStartVol: number[];
+        sfxEndVol: number[];
+        sfxDuration: number[];
+        sfxEffect: SoundExpressionEffect[];
+        sfxCurve: InterpolationCurve[];
+        data: Buffer;
+    }
+
+    // The auto-merge script looks for this exact function + switch + default.
+    // It will inject extra `case UTMSong.X:` blocks before the default.
+    function getSongData(song: UTMSong): SongData {
+        switch (song) {
+            // (cases will be auto-added here by the tracker)
+
+                    case UTMSong.NEWAGENTSUSPENCELOOP:
+            return {
+                stepMs: 200,
+                sfxWave: [WaveShape.Square, WaveShape.Sine, WaveShape.Sawtooth, WaveShape.Square, WaveShape.Noise, WaveShape.Sawtooth, WaveShape.Square],
+                sfxStartFreq: [262, 50, 65, 131, 262, 69, 277],
+                sfxEndFreq: [262, 50, 65, 131, 262, 69, 277],
+                sfxStartVol: [255, 255, 255, 255, 255, 255, 255],
+                sfxEndVol: [0, 0, 0, 0, 0, 0, 0],
+                sfxDuration: [200, 200, 200, 1600, 200, 200, 200],
+                sfxEffect: [SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None],
+                sfxCurve: [InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear],
+                data: hex\`
+                    06 00 01 01 01 02 03 05 00 01 01 01 02 02 00 04
+                    03 00 05 05 04 01 01 01 02 03 00 04 00 03 00 05
+                    05 01 06
+                \`
+            };
+
+        default:
+                return null;
+        }
+    }
+
+    function playSfx(songData: SongData, id: number) {
+        const sfxCount = songData.sfxWave.length;
+        if (id &lt; 0 || id &gt;= sfxCount) return;
+
+        music.play(
+            music.createSoundEffect(
+                songData.sfxWave[id],
+                songData.sfxStartFreq[id],
+                songData.sfxEndFreq[id],
+                songData.sfxStartVol[id],
+                songData.sfxEndVol[id],
+                songData.sfxDuration[id],
+                songData.sfxEffect[id],
+                songData.sfxCurve[id]
+            ),
+            music.PlaybackMode.InBackground
+        );
+    }
+
+    function playSongData(songData: SongData) {
+        let i = 0;
+        const data = songData.data;
+        while (i &lt; data.length) {
+            const count = data[i++];
+            for (let j = 0; j &lt; count; j++) {
+                const sfxId = data[i++];
+                playSfx(songData, sfxId);
+            }
+            pause(songData.stepMs);
+        }
+    }
+
+    //% blockId=play_utm_song
+    //% block="play UTM song %song"
+    export function playSong(song: UTMSong) {
+        const songData = getSongData(song);
+        if (songData) {
+            playSongData(songData);
+        }
+    }
+
+    //% blockId=play_utm_song_loop
+    //% block="play UTM song %song in loop"
+    export function playSongLoop(song: UTMSong) {
+        const songData = getSongData(song);
+        if (songData) {
+            forever(function () {
+                playSongData(songData);
+            });
+        }
+    }
+}</textarea>
+                    <p><strong>Step 2:</strong><br style="padding-bottom:12px;">
+                    Use the tracker to compose songs with custom instruments and a tracker-style workflow.
+                      <br>
+                    </p>
+                    <p style="margin-top:12px;"><strong>Step 3:</strong><br>
+                    When you are done composing, click <strong>Export</strong> in UTM. Copy the code from your existing UTM extension file into the merge box, click <strong>&ldquo;Merge Song Into Extension&rdquo;</strong>, and then replace the contents of your extension file with the merged code shown. Your updated project will now have a single <code>play UTM song</code> block with a dropdown for all your songs.</p>
+                    <p style="margin-top:8px;">This flow is not completely finished, but it is solid and already more flexible than the built-in editor. Try it out and experiment with some unique songs.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeModal('welcomeModal')">Close</button>
+            </div>
+        </div>
+    </div>
     <div class="top-panel">
+
         <div>
-            <h1>Unique's Tracker for MakeCode (UTM)</h1>
-            <div style="font-size: 11px; color: #999; margin-top: 2px;">v1.3.4</div>
+            <h1 style="cursor:pointer;" onclick="openModal('welcomeModal')">
+    <img src="https://i.ibb.co/svPzCB5f/utm-logo-white.png" 
+         alt="UTM Logo"
+         style="height:20px;vertical-align:middle;">
+</h1>
+            <div style="font-size: 11px; color: #999; margin-top: 2px;">v1.3.5</div>
         </div>
         <div class="top-actions">
             <button id="instMgrBtn">Manage Instruments</button>
@@ -541,17 +707,59 @@
 
 <div class="bottom-controls">
     <div class="left-controls">
-        <button id="playBtn">Play</button>
-        <button id="stopBtn">Stop</button>
-        <button id="drawBtn">Draw</button>
-        <button id="selectBtn">Select</button>
-        <button id="eraseBtn">Erase</button>
-        <button id="copyBtn" disabled>Copy</button>
-        <button id="pasteBtn" disabled>Paste</button>
-        <button id="clearBtn">Clear All</button>
-        <button id="demoBtn">Demo</button>
+        <button id="playBtn" class="icon-btn">
+    <svg width="18" height="18" viewBox="0 0 24 20" fill="currentColor">
+        <path d="M8 5v14l11-7z"/>
+    </svg>
+</button>
+        <button id="stopBtn" class="icon-btn">
+    <svg width="18" height="18" viewBox="0 0 24 20" fill="currentColor">
+        <rect x="6" y="6" width="12" height="12" rx="2"/>
+    </svg>
+</button>
+        <button id="drawBtn" class="icon-btn">
+    <svg width="13" height="13" viewBox="0 0 15 15" fill="currentColor">
+        <!-- Pencil body -->
+        <path d="M1,11v4h4l7-7L8,4L1,11z M11,1L9,3l4,4l2-2L11,1z"/>
+    </svg>
+</button>
+
+        <button id="selectBtn" class="icon-btn">
+    <svg width="15" height="15" viewBox="0 0 300 275" fill="currentColor">
+        <path d="M250.685,297c5.345-17.25,22.776-77.344,22.776-99.488v-76.899c0-10.362-8.324-18.793-18.555-18.793
+    c-10.228,0-18.552,8.431-18.552,18.793v32.79c0,1.927-1.566,3.493-3.492,3.493c-1.927,0-3.492-1.566-3.492-3.493v-51.243
+    c0-10.359-8.326-18.789-18.558-18.789c-10.23,0-18.553,8.43-18.553,18.789v36.533c0,1.927-1.567,3.492-3.492,3.492
+    c-1.926,0-3.491-1.566-3.491-3.492V87.455c0-10.358-8.324-18.784-18.555-18.784c-10.229,0-18.552,8.426-18.552,18.784v36.542
+    c0,1.924-1.568,3.492-3.493,3.492c-1.927,0-3.492-1.568-3.492-3.492V18.788C141.185,8.427,132.859,0,122.627,0
+    c-10.231,0-18.556,8.427-18.556,18.788V181.7c0,1.449-0.909,2.762-2.266,3.271c-1.345,0.504-2.918,0.103-3.855-0.974l-43.461-49.715
+    l-0.51-0.529c-3.483-3.296-8.053-5.124-12.863-5.151h-0.124c-5.003,0.058-9.629,1.962-13.025,5.366
+    c-4.28,4.283-7.634,12.468,0.719,27.156c12.684,22.277,26.547,43.406,38.829,62.122c9.131,13.92,17.757,27.066,24.188,38.154
+    c4.111,7.096,12.687,25.727,17.429,35.599H250.685z"/>
+    </svg>
+</button>
+        <button id="eraseBtn" class="icon-btn">
+    <svg width="15" height="15" viewBox="0 0 36 30" fill="currentColor">
+        <path d="M28,32H15.33L19,28.37l-9.9-9.9L3.54,24a1.83,1.83,0,0,0,0,2.6L9,32H3a1,1,0,0,0,0,2H28a1,1,0,0,0,0-2Z"></path>
+        <path d="M34.08,10.65l-7.3-7.3a1.83,1.83,0,0,0-2.6,0L10.47,17.06l9.9,9.9L34.08,13.25A1.85,1.85,0,0,0,34.08,10.65Z"></path>
+    </svg>
+</button>
+
+        <button id="clearBtn" class="icon-btn">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M8 1.5V2.5H3C2.44772 2.5 2 2.94772 2 3.5V4.5C2 5.05228 2.44772 5.5 3 5.5H21C21.5523 5.5 22 5.05228 22 4.5V3.5C22 2.94772 21.5523 2.5 21 2.5H16V1.5C16 0.947715 15.5523 0.5 15 0.5H9C8.44772 0.5 8 0.947715 8 1.5Z"></path>
+        <path d="M3.9231 7.5H20.0767L19.1344 20.2216C19.0183 21.7882 17.7135 23 16.1426 23H7.85724C6.28636 23 4.98148 21.7882 4.86544 20.2216L3.9231 7.5Z"></path>
+    </svg>
+</button>
+      <div style="
+    width:1px;
+    height:24px;
+    background:#444;
+    margin:0 10px;
+"></div>
+        <button  id="demoBtn">Demo</button>
         <button id="shortcutBtn">Shortcuts</button>
     </div>
+  
     <div class="right-controls">
         <label>BPM</label>
         <input type="number" id="bpm" value="120" min="60" max="240" style="width:70px">
@@ -702,9 +910,9 @@
                 </div>
             </div>
             <div style="margin-bottom:8px;font-size:13px;color:#999;">
-                Manual instructions (if not using auto-merge):
+                After a successful merge, your updated extension code will appear below. Copy it back into your MakeCode project.
             </div>
-            <div class="code-output" id="code"></div>
+            <div class="code-output" id="code" style="display:none"></div>
         </div>
         <div class="modal-footer">
             <button onclick="copyCode()">Copy Instructions</button>
@@ -729,7 +937,7 @@
                 <strong>Ctrl/Cmd + V</strong><span>Paste (drag to position)</span>
                 <strong>Ctrl/Cmd + X</strong><span>Cut Selection</span>
                 <strong>Delete</strong><span>Clear Selection</span>
-                <strong>Escape</strong><span>Cancel Paste / Clear Selection</span>
+                <strong>Escape/Backspace</strong><span>Cancel Paste / Clear Selection</span>
                 <strong>Enter</strong><span>Confirm Paste</span>
                 <strong>Mouse Drag</strong><span>Move Selection / Paste Preview</span>
             </div>
@@ -1130,7 +1338,7 @@
                 cell.classList.remove('selected');
             }
         });
-        document.getElementById('copyBtn').disabled = selectedCells.size === 0;
+       
         updateStatusBar();
     }
     
@@ -1180,7 +1388,7 @@
             note: c.note ? JSON.parse(JSON.stringify(c.note)) : null
         })).filter(c => c.note);
         
-        document.getElementById('pasteBtn').disabled = false;
+      
         updateStatusBar();
     }
     
@@ -1869,88 +2077,139 @@
     }
     
     function generateLegacyExport(name, songData) {
-        return `// COMPLETE UTMF EXTENSION CODE - Ready to use!
+        return `// DEFAULT UTMF utmMusic EXTENSION WITH "${'${name}'}" ADDED
 
-
-// Copy this entire code and paste it as a new extension in MakeCode Arcade
-
+//% color="#ff0000" weight=100 icon="\uf025" block="UTM Music"
 namespace utmMusic {
-export enum UTMSong {
-//% block=”${name}”
-${name.toUpperCase()}
-}
 
+    // This enum starts empty. The tracker’s auto-merge will
+    // inject new entries like:
+    //
+    //   //% block="My Song"
+    //   MY_SONG,
+    //
+    export enum UTMSong {
+        //% block="newAgentSuspenceLoop"
+        NEWAGENTSUSPENCELOOP,
+        //% block="${'${name}'}"
+        ${'${name.toUpperCase()}'},
+    }
 
-export function playSong(song: UTMSong, loop: boolean = false) {
-    const data = getSongData(song);
-    if (!data) return;
-    
-    const sfx: music.SoundEffect[] = [];
-    for (let i = 0; i < data.sfxWave.length; i++) {
-        const sound = music.createSoundEffect(
-            data.sfxWave[i],
-            data.sfxStartFreq[i],
-            data.sfxEndFreq[i],
-            data.sfxStartVol[i],
-            data.sfxEndVol[i],
-            data.sfxDuration[i],
-            data.sfxEffect[i],
-            data.sfxCurve[i]
+    interface SongData {
+        stepMs: number;
+        sfxWave: WaveShape[];
+        sfxStartFreq: number[];
+        sfxEndFreq: number[];
+        sfxStartVol: number[];
+        sfxEndVol: number[];
+        sfxDuration: number[];
+        sfxEffect: SoundExpressionEffect[];
+        sfxCurve: InterpolationCurve[];
+        data: Buffer;
+    }
+
+    // The auto-merge script looks for this exact function + switch + default.
+    // It will inject extra \`case UTMSong.X:\` blocks before the default.
+    function getSongData(song: UTMSong): SongData {
+        switch (song) {
+            // (cases will be auto-added here by the tracker)
+
+            case UTMSong.NEWAGENTSUSPENCELOOP:
+                return {
+                    stepMs: 200,
+                    sfxWave: [WaveShape.Square, WaveShape.Sine, WaveShape.Sawtooth, WaveShape.Square, WaveShape.Noise, WaveShape.Sawtooth, WaveShape.Square],
+                    sfxStartFreq: [262, 50, 65, 131, 262, 69, 277],
+                    sfxEndFreq: [262, 50, 65, 131, 262, 69, 277],
+                    sfxStartVol: [255, 255, 255, 255, 255, 255, 255],
+                    sfxEndVol: [0, 0, 0, 0, 0, 0, 0],
+                    sfxDuration: [200, 200, 200, 1600, 200, 200, 200],
+                    sfxEffect: [SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None, SoundExpressionEffect.None],
+                    sfxCurve: [InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear, InterpolationCurve.Linear],
+                    data: hex\`
+                        06 00 01 01 01 02 03 05 00 01 01 01 02 02 00 04
+                        03 00 05 05 04 01 01 01 02 03 00 04 00 03 00 05
+                        05 01 06
+                    \`
+                };
+
+            case UTMSong.${'${name.toUpperCase()}'}:
+                return {
+                    stepMs: ${'${songData.stepMs}'},
+                    sfxWave: [${'${songData.sfxWave}'}],
+                    sfxStartFreq: [${'${songData.sfxStartFreq}'}],
+                    sfxEndFreq: [${'${songData.sfxEndFreq}'}],
+                    sfxStartVol: [${'${songData.sfxStartVol}'}],
+                    sfxEndVol: [${'${songData.sfxEndVol}'}],
+                    sfxDuration: [${'${songData.sfxDuration}'}],
+                    sfxEffect: [${'${songData.sfxEffect}'}],
+                    sfxCurve: [${'${songData.sfxCurve}'}],
+                    data: hex\`
+                        ${'${songData.hexStr}'}
+                    \`
+                };
+
+            default:
+                return null;
+        }
+    }
+
+    function playSfx(songData: SongData, id: number) {
+        const sfxCount = songData.sfxWave.length;
+        if (id < 0 || id >= sfxCount) return;
+
+        music.play(
+            music.createSoundEffect(
+                songData.sfxWave[id],
+                songData.sfxStartFreq[id],
+                songData.sfxEndFreq[id],
+                songData.sfxStartVol[id],
+                songData.sfxEndVol[id],
+                songData.sfxDuration[id],
+                songData.sfxEffect[id],
+                songData.sfxCurve[id]
+            ),
+            music.PlaybackMode.InBackground
         );
-        sfx.push(sound);
     }
 
-    control.runInParallel(() => {
-        do {
-            let idx = 0;
-            while (idx < data.data.length) {
-                const count = data.data[idx++];
-                const startTime = game.runtime();
-                
-                for (let i = 0; i < count; i++) {
-                    const sfxId = data.data[idx++];
-                    control.runInParallel(() => {
-                        sfx[sfxId].play();
-                    });
-                }
-                
-                const elapsed = game.runtime() - startTime;
-                const waitTime = data.stepMs - elapsed;
-                if (waitTime > 0) pause(waitTime);
+    function playSongData(songData: SongData) {
+        let i = 0;
+        const data = songData.data;
+        while (i < data.length) {
+            const count = data[i++];
+            for (let j = 0; j < count; j++) {
+                const sfxId = data[i++];
+                playSfx(songData, sfxId);
             }
-        } while (loop);
-    });
-}
+            pause(songData.stepMs);
+        }
+    }
 
-function getSongData(song: UTMSong) {
-    switch (song) {
-        case UTMSong.${name.toUpperCase()}:
-            return {
-                stepMs: ${songData.stepMs},
-                sfxWave: [${songData.sfxWave}],
-                sfxStartFreq: [${songData.sfxStartFreq}],
-                sfxEndFreq: [${songData.sfxEndFreq}],
-                sfxStartVol: [${songData.sfxStartVol}],
-                sfxEndVol: [${songData.sfxEndVol}],
-                sfxDuration: [${songData.sfxDuration}],
-                sfxEffect: [${songData.sfxEffect}],
-                sfxCurve: [${songData.sfxCurve}],
-                data: hex\`${songData.hexStr}\`
-            };
-        default:
-            return null;
+    //% blockId=play_utm_song
+    //% block="play UTM song %song"
+    export function playSong(song: UTMSong) {
+        const songData = getSongData(song);
+        if (songData) {
+            playSongData(songData);
+        }
+    }
+
+    //% blockId=play_utm_song_loop
+    //% block="play UTM song %song in loop"
+    export function playSongLoop(song: UTMSong) {
+        const songData = getSongData(song);
+        if (songData) {
+            forever(function () {
+                playSongData(songData);
+            });
+        }
     }
 }
 
-
+// USAGE: utmMusic.playSong(utmMusic.UTMSong.${'${name.toUpperCase()}'})
+// Stats: ${'${songData.sfxCount}'} instruments, ${'${ROWS}'} steps, ${'${songData.dataSize}'} bytes`;
 }
-
-// USAGE: utmMusic.playSong(utmMusic.UTMSong.${name.toUpperCase()}, true)
-// Stats: ${songData.sfxCount} instruments, ${ROWS} steps, ${songData.dataSize} bytes`;
-}
-
-
-    function generateSequencerExport(name, songData) {
+function generateSequencerExport(name, songData) {
         // Generate instrument definitions
         const instDefs = [];
         Object.entries(insts).forEach(([id, inst]) => {
@@ -2176,7 +2435,7 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
         const caseCode = `        case UTMSong.${name.toUpperCase()}:\n            return {\n                stepMs: ${songData.stepMs},\n                sfxWave: [${songData.sfxWave}],\n                sfxStartFreq: [${songData.sfxStartFreq}],\n                sfxEndFreq: [${songData.sfxEndFreq}],\n                sfxStartVol: [${songData.sfxStartVol}],\n                sfxEndVol: [${songData.sfxEndVol}],\n                sfxDuration: [${songData.sfxDuration}],\n                sfxEffect: [${songData.sfxEffect}],\n                sfxCurve: [${songData.sfxCurve}],\n                data: hex\`\n                    ${songData.hexStr}\n                \`\n            };`;
         
         // Remove existing case if it exists
-        const caseRegex = new RegExp(`\\s*case\\s+UTMSong\\.${name.toUpperCase()}:[\\s\\S]*?(?=case\\s+UTMSong\\.|default:|\\n\\s*\\})`, 'g');
+        const caseRegex = new RegExp(`\\s*case\\s+UTMSong\\.${name.toUpperCase()}:[\\s\\S]*?\n\\s*\\};`, 'g');
         mergedCode = mergedCode.replace(caseRegex, '');
         
         // Add new case before default
@@ -2191,7 +2450,9 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
             return;
         }
         
-        document.getElementById('code').textContent = mergedCode;
+        const codeEl = document.getElementById('code');
+        codeEl.style.display = 'block';
+        codeEl.textContent = mergedCode;
         document.getElementById('existingExtension').value = '';
         
         alert(`Successfully merged song "${name}" into your extension!\n\nThe merged code is shown below. Copy it and replace your main.ts file.`);
@@ -2256,8 +2517,6 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
         updateModeButtons();
         initGrid();
     };
-    document.getElementById('copyBtn').onclick = copySelection;
-    document.getElementById('pasteBtn').onclick = startPaste;
     document.getElementById('clearBtn').onclick = () => { 
         if (confirm('Clear all notes?')) {
             for (let r = 0; r < ROWS; r++) {
@@ -2285,10 +2544,46 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
     document.getElementById('setStepsBtn').onclick = setSteps;
     document.getElementById('instMgrBtn').onclick = () => { openModal('instMgrModal'); initInstMgr(); };
     document.getElementById('importBtn').onclick = () => openModal('importModal');
-    document.getElementById('exportBtn').onclick = exportCode;
+    document.getElementById('exportBtn').onclick = () => {
+        openModal('exportModal');
+        const codeEl = document.getElementById('code');
+        if (codeEl) { codeEl.style.display = 'none'; codeEl.textContent = ''; }
+    };
     document.getElementById('saveProjectBtn').onclick = saveProject;
     document.getElementById('loadProjectBtn').onclick = () => document.getElementById('fileInput').click();
     document.getElementById('fileInput').onchange = loadProject;
+    const welcomeStartBtn = document.getElementById('welcomeStartBtn');
+    if (welcomeStartBtn) {
+        welcomeStartBtn.onclick = () => {
+            closeModal('welcomeModal');
+            // Reset to a fresh empty project
+            pattern = [];
+            for (let r = 0; r < ROWS; r++) {
+                pattern.push([null, null, null, null, null, null]);
+            }
+            selectedCells.clear();
+            copiedNotes = [];
+            pasteMode = false;
+            isDraggingNotes = false;
+            initGrid();
+        };
+    }
+    const welcomeOpenBtn = document.getElementById('welcomeOpenBtn');
+    if (welcomeOpenBtn) {
+        welcomeOpenBtn.onclick = () => {
+            closeModal('welcomeModal');
+            document.getElementById('fileInput').click();
+        };
+    }
+    const welcomeExtBtn = document.getElementById('welcomeExtBtn');
+    if (welcomeExtBtn) {
+        welcomeExtBtn.onclick = () => {
+            const panel = document.getElementById('welcomeInstructions');
+            if (panel) {
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            }
+        };
+    }
     document.getElementById('noteLength').addEventListener('input', (e) => {
         selNoteLength = parseInt(e.target.value) || 1;
     });
