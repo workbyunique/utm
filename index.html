@@ -1377,30 +1377,41 @@
         }
         
         if (wave === 'noise') {
-            const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+            // 1. short noise burst (dur seconds)
+            const duration = dur || 0.25;
+            const sampleCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
+            const buffer = ctx.createBuffer(1, sampleCount, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+        
+            for (let i = 0; i < sampleCount; i++) {
+                data[i] = Math.random() * 2 - 1;
+            }
         
             const src = ctx.createBufferSource();
-            src.buffer = buf;
+            src.buffer = buffer;
         
-            // New: filter to give noise a perceivable "pitch"
+            // 2. use a filter so "frequency" actually changes the timbre
             const filter = ctx.createBiquadFilter();
             filter.type = 'bandpass';
-
-            const start = startFreq || freq || 440;
-            const end   = endFreq   || freq || start;
-
-            filter.frequency.setValueAtTime(start, ctx.currentTime);
-            if (start !== end) {
-                filter.frequency.linearRampToValueAtTime(end, ctx.currentTime + dur);
+        
+            const base = startFreq || freq || 440;
+            const startCutoff = Math.max(80, Math.min(8000, base));
+            const endCutoff = Math.max(80, Math.min(8000, endFreq || base));
+        
+            filter.frequency.setValueAtTime(startCutoff, ctx.currentTime);
+            if (startCutoff !== endCutoff) {
+                filter.frequency.linearRampToValueAtTime(endCutoff, ctx.currentTime + duration);
             }
-
+        
+            // slightly resonant to make "pitch" more obvious
+            filter.Q.value = 4;
+        
+            // 3. envelope is still handled by the outer gain node `g`
             src.connect(filter);
             filter.connect(g);
-
-            src.start();
-            src.stop(ctx.currentTime + dur);
+        
+            src.start(ctx.currentTime);
+            src.stop(ctx.currentTime + duration);
             oscs.push(src);
         } else {
             const osc = ctx.createOscillator();
