@@ -14,6 +14,7 @@
             box-sizing: border-box;
         }
 
+
     body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
         background: #1a1a1a;
@@ -509,6 +510,7 @@
     }
 </style>
 
+
 </head>
 <body>
     <div class="top-panel">
@@ -517,10 +519,6 @@
             <div style="font-size: 11px; color: #999; margin-top: 2px;">v1.3.0</div>
         </div>
         <div class="top-actions">
-            <div class="mode-selector">
-                <button id="legacyModeBtn">Legacy UTMF</button>
-                <button id="sequencerModeBtn">Sequencer</button>
-            </div>
             <button id="instMgrBtn">Manage Instruments</button>
             <label>Steps</label>
             <input type="number" id="stepCount" value="16" min="1" max="256" style="width:70px">
@@ -747,7 +745,6 @@
     const CHANNELS = 6;
     let ROWS = 16;
     let beatsPerMeasure = 4;
-    let exportMode = 'legacy'; // 'legacy' or 'sequencer'
     
     let pattern = [];
     for (let i = 0; i < ROWS; i++) {
@@ -798,19 +795,6 @@
     function updateVal(t) {
         const map = {start:'iStart',end:'iEnd',startVol:'iStartVol',endVol:'iEndVol'};
         document.getElementById(t+'Val').textContent = document.getElementById(map[t]).value;
-    }
-    
-    function updateExportMode() {
-        const legacyBtn = document.getElementById('legacyModeBtn');
-        const sequencerBtn = document.getElementById('sequencerModeBtn');
-        
-        if (exportMode === 'legacy') {
-            legacyBtn.classList.add('active');
-            sequencerBtn.classList.remove('active');
-        } else {
-            legacyBtn.classList.remove('active');
-            sequencerBtn.classList.add('active');
-        }
     }
     
     function initInsts() {
@@ -1844,18 +1828,17 @@
             return;
         }
         
-        let code;
-        
-        if (exportMode === 'sequencer') {
-            // Sequencer mode - new instrument-based system
-            code = generateSequencerExport(name, songData);
-        } else {
-            // Legacy UTMF mode
-            code = generateLegacyExport(name, songData);
-        }
+        const code = generateLegacyExport(name, songData);
         
         document.getElementById('code').textContent = code;
         openModal('exportModal');
+        
+        // Resume audio context after user interaction with modal
+        setTimeout(() => {
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }, 100);
     }
     
     function generateLegacyExport(name, songData) {
@@ -1977,7 +1960,7 @@ case UTMSong.${name.toUpperCase()}:
 return {
 stepMs: ${songData.stepMs},
 instruments: ${name}_instruments,
-pattern: ${JSON.stringify(pattern, null, 4).replace(/"([^"]+)":/g, '$1:')}
+pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, ‘$1:')}
 };
 
 // This sequencer-based format allows easier editing of individual notes
@@ -2187,8 +2170,24 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/"([^"]+)":/g, '$1:')}
         alert(`Successfully merged song "${name}" into your extension!\n\nThe merged code is shown below. Copy it and replace your main.ts file.`);
     }
     
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openModal(id) { 
+        document.getElementById(id).classList.add('active');
+        // Resume audio context when modal opens
+        setTimeout(() => {
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }, 100);
+    }
+    function closeModal(id) { 
+        document.getElementById(id).classList.remove('active');
+        // Resume audio context when modal closes
+        setTimeout(() => {
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }, 100);
+    }
     
     document.getElementById('noteBtn').onclick = e => {
         const p = document.getElementById('notePopup');
@@ -2270,14 +2269,6 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/"([^"]+)":/g, '$1:')}
         beatsPerMeasure = parseInt(document.getElementById('beatsPerMeasure').value) || 4;
         initGrid();
     });
-    document.getElementById('legacyModeBtn').onclick = () => {
-        exportMode = 'legacy';
-        updateExportMode();
-    };
-    document.getElementById('sequencerModeBtn').onclick = () => {
-        exportMode = 'sequencer';
-        updateExportMode();
-    };
     
     function saveProject() {
         const projectData = {
@@ -2301,6 +2292,13 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/"([^"]+)":/g, '$1:')}
         a.download = (projectData.songName || 'song') + '.utmf';
         a.click();
         URL.revokeObjectURL(url);
+        
+        // Resume audio context after download
+        setTimeout(() => {
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+        }, 100);
     }
     
     function loadProject(e) {
@@ -2334,6 +2332,13 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/"([^"]+)":/g, '$1:')}
                 // Update UI
                 initInsts();
                 initGrid();
+                
+                // Resume audio context after load
+                setTimeout(() => {
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
+                }, 100);
                 
                 alert('Project loaded successfully!');
             } catch (error) {
@@ -2430,7 +2435,13 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/"([^"]+)":/g, '$1:')}
     initNotes();
     initColors();
     updateModeButtons();
-    updateExportMode();
+    
+    // Ensure audio context is ready
+    document.addEventListener('click', () => {
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+    }, { once: false });
 </script>
 
 
