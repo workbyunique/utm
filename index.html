@@ -509,6 +509,77 @@
         color: #999;
         line-height: 1.5;
     }
+
+        /* Step start marker + comment marker */
+.step-number.start-step {
+    outline: 3px solid #00aaff;
+    outline-offset: -3px;
+    color: #d7f1ff;
+}
+
+.step-number.has-comment::after {
+    content: "💬";
+    font-size: 11px;
+    margin-left: 6px;
+    opacity: 0.85;
+}
+
+/* Hold indicator */
+.step-hold-ring {
+    position: absolute;
+    inset: 6px;
+    border-radius: 6px;
+    border: 2px solid rgba(0,170,255,0.35);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.step-hold-ring > div {
+    height: 100%;
+    width: 0%;
+    background: rgba(0,170,255,0.25);
+}
+
+/* Step comment popup */
+.step-menu {
+    position: fixed;
+    z-index: 1100;
+    width: 260px;
+    background: #242424;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.6);
+    display: none;
+    flex-direction: column;
+}
+
+.step-menu.active { display: flex; }
+
+.step-menu-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 12px;
+    color: #bbb;
+}
+
+.step-menu-body { padding: 10px 12px; }
+
+.step-menu textarea {
+    height: 90px;
+    resize: none;
+}
+
+.step-menu-actions {
+    padding: 10px 12px;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    gap: 8px;
+}
+.step-menu-actions button { flex: 1; min-height: 40px; }
 </style>
 
 
@@ -948,6 +1019,21 @@ namespace utmMusic {
     </div>
 </div>
 
+<div class="step-menu" id="stepMenu">
+  <div class="step-menu-header">
+    <div id="stepMenuTitle">Step</div>
+    <button class="close-btn" id="stepMenuClose" type="button">&times;</button>
+  </div>
+  <div class="step-menu-body">
+    <textarea id="stepMenuText" placeholder="Add a comment for this step..."></textarea>
+  </div>
+  <div class="step-menu-actions">
+    <button id="stepMenuRemove" type="button" style="background:#3a2a2a;">Remove</button>
+    <button id="stepMenuSave" type="button">Save</button>
+  </div>
+</div>
+
+    
 <script>
     const ctx = new AudioContext();
     const CHANNELS = 6;
@@ -955,9 +1041,11 @@ namespace utmMusic {
     let beatsPerMeasure = 4;
     
     let pattern = [];
+    let stepComments
     for (let i = 0; i < ROWS; i++) {
         pattern.push([null, null, null, null, null, null]);
     }
+    stepComments = new Array(ROWS).fill('');
     
     let playing = false, row = 0, timer = null, oscs = [];
     let selInst = 'square', selNote = 'C4';
@@ -990,13 +1078,26 @@ namespace utmMusic {
     
     const freqOptions = [100,150,200,250,300,350,400,450,500,600,700,800,900,1000,1200,1500,2000];
     
-    let insts = {
+    const DEFAULT_INSTS = {
         sine:{name:'Sine',wave:'sine',color:'#1a3a4a',text:'#6ab4d4',freqMode:'relative'},
         square:{name:'Square',wave:'square',color:'#3a2a4a',text:'#b47ad4',freqMode:'relative'},
         sawtooth:{name:'Saw',wave:'sawtooth',color:'#4a3a2a',text:'#d49a6a',freqMode:'relative'},
         triangle:{name:'Tri',wave:'triangle',color:'#2a4a3a',text:'#7ad4a4',freqMode:'relative'},
         noise:{name:'Noise',wave:'noise',color:'#3a3a3a',text:'#aaa',freqMode:'relative'}
     };
+
+    // Replace your existing insts init with this:
+    let insts = JSON.parse(JSON.stringify(DEFAULT_INSTS));
+    
+    // Step-start + comments
+    let startPlaybackStep = null;                 // null means start at 0
+    // stepComments = [];                        // stepComments[row] = string | undefined
+    
+    // Long-press handling
+    let stepHoldTimer = null;
+    let stepHoldRow = null;
+    let stepHoldEl = null;
+    let stepHoldStart = 0;
     
     const colors = ['#1a3a4a','#3a2a4a','#4a3a2a','#2a4a3a','#3a3a3a','#4a1a2a','#2a1a4a','#1a4a4a','#4a4a1a','#2a4a1a'];
     
@@ -1141,8 +1242,110 @@ namespace utmMusic {
         
         pattern = newPattern;
         ROWS = newRows;
+
+        normalizeStepComments();
+
+        if (startPlaybackStep !== null && startPlaybackStep >= ROWS) {
+            startPlaybackStep = null;
+        }
+
         initGrid();
     }
+
+    function onlyDefaultInstruments() {
+    insts = JSON.parse(JSON.stringify(DEFAULT_INSTS));
+    selInst = 'square';
+}
+    
+    function normalizeStepComments() {
+        if (!Array.isArray(stepComments)) stepComments = [];
+        if (stepComments.length < ROWS) {
+            stepComments = stepComments.concat(new Array(ROWS - stepComments.length).fill(''));
+        } else if (stepComments.length > ROWS) {
+            stepComments = stepComments.slice(0, ROWS);
+        }
+    }
+    
+    function toggleStartPlaybackStep(r) {
+        startPlaybackStep = (startPlaybackStep === r) ? null : r;
+        initGrid();
+        updateStatusBar();
+    }
+    
+    function openStepMenuForRow(r, anchorEl) {
+        const menu = document.getElementById('stepMenu');
+        const title = document.getElementById('stepMenuTitle');
+        const textarea = document.getElementById('stepMenuText');
+    
+        title.textContent = `Step ${String(r+1).padStart(2,'0')} Comment`;
+        textarea.value = (stepComments[r] || '').trim();
+    
+        const rect = anchorEl.getBoundingClientRect();
+        const pad = 8;
+        const x = Math.min(window.innerWidth - 270, rect.right + pad);
+        const y = Math.max(10, Math.min(window.innerHeight - 220, rect.top - 6));
+    
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.dataset.row = String(r);
+        menu.classList.add('active');
+        textarea.focus();
+    }
+    
+    function closeStepMenu() {
+        const menu = document.getElementById('stepMenu');
+        menu.classList.remove('active');
+        menu.dataset.row = '';
+    }
+    
+    function beginStepHold(r, el) {
+        clearStepHold();
+    
+        stepHoldRow = r;
+        stepHoldEl = el;
+        stepHoldStart = performance.now();
+    
+        // add indicator
+        el.style.position = 'relative';
+        const ring = document.createElement('div');
+        ring.className = 'step-hold-ring';
+        ring.innerHTML = '<div></div>';
+        ring.dataset.hold = '1';
+        el.appendChild(ring);
+    
+        const fill = ring.firstElementChild;
+    
+        // animate indicator over 500ms
+        const dur = 500;
+        const tick = () => {
+            if (!stepHoldEl || stepHoldRow !== r) return;
+            const t = performance.now() - stepHoldStart;
+            const p = Math.max(0, Math.min(1, t / dur));
+            fill.style.width = `${Math.round(p * 100)}%`;
+            if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+    
+        stepHoldTimer = setTimeout(() => {
+            // Open menu on hold
+            openStepMenuForRow(r, el);
+            clearStepHold(true);
+        }, dur);
+    }
+    
+    function clearStepHold(keepIndicator = false) {
+        if (stepHoldTimer) clearTimeout(stepHoldTimer);
+        stepHoldTimer = null;
+    
+        if (stepHoldEl && !keepIndicator) {
+            const ring = stepHoldEl.querySelector('.step-hold-ring[data-hold="1"]');
+            if (ring) ring.remove();
+        }
+        stepHoldRow = null;
+        stepHoldEl = null;
+        stepHoldStart = 0;
+    }
+
     
     function initGrid() {
         const g = document.getElementById('grid');
@@ -1154,11 +1357,34 @@ namespace utmMusic {
         for (let r = 0; r < ROWS; r++) {
             const s = document.createElement('div');
             s.className = 'step-number';
-            if (r % beatsPerMeasure === 0) {
-                s.classList.add('measure-start');
-            }
+            s.dataset.row = r;
+            
+            if (r % beatsPerMeasure === 0) s.classList.add('measure-start');
+            if (startPlaybackStep === r) s.classList.add('start-step');
+            
+            const hasComment = (stepComments[r] || '').trim().length > 0;
+            if (hasComment) s.classList.add('has-comment');
+            
             s.textContent = (r+1).toString().padStart(2,'0');
+            
+            // Click toggles start step
+            s.addEventListener('click', (e) => {
+                // If the comment menu is open from hold, don't also toggle
+                const menuOpen = document.getElementById('stepMenu').classList.contains('active');
+                if (menuOpen) return;
+                toggleStartPlaybackStep(r);
+            });
+            
+            // Long press opens comment menu (mouse + touch)
+            s.addEventListener('mousedown', () => beginStepHold(r, s));
+            s.addEventListener('mouseup', () => clearStepHold());
+            s.addEventListener('mouseleave', () => clearStepHold());
+            s.addEventListener('touchstart', (e) => { e.preventDefault(); beginStepHold(r, s); }, {passive:false});
+            s.addEventListener('touchend', () => clearStepHold());
+            s.addEventListener('touchcancel', () => clearStepHold());
+            
             g.appendChild(s);
+
             
             for (let c = 0; c < CHANNELS; c++) {
                 const cell = document.createElement('div');
@@ -1367,6 +1593,11 @@ namespace utmMusic {
         } else {
             selectionCount.textContent = '';
         }
+
+        if (startPlaybackStep !== null) {
+            statusText.textContent += ` | Start Step: ${String(startPlaybackStep+1).padStart(2,'0')}`;
+        }
+
     }
     
     function copySelection() {
@@ -1715,13 +1946,17 @@ namespace utmMusic {
     function play() {
         if (playing) return;
         playing = true;
-        row = 0;
+    
+        row = (startPlaybackStep !== null) ? startPlaybackStep : 0;
+    
         const bpm = parseInt(document.getElementById('bpm').value);
         const msPerStep = (60/bpm)*1000;
+    
         playRow(row);
         updateModeButtons();
+    
         timer = setInterval(() => {
-            row = (row+1)%ROWS;
+            row = (row + 1) % ROWS;
             playRow(row);
         }, msPerStep);
     }
@@ -2552,21 +2787,67 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
     document.getElementById('saveProjectBtn').onclick = saveProject;
     document.getElementById('loadProjectBtn').onclick = () => document.getElementById('fileInput').click();
     document.getElementById('fileInput').onchange = loadProject;
+
+    document.getElementById('stepMenuClose').onclick = closeStepMenu;
+
+    document.getElementById('stepMenuSave').onclick = () => {
+        const menu = document.getElementById('stepMenu');
+        const r = parseInt(menu.dataset.row || '-1');
+        if (r < 0 || r >= ROWS) return;
+    
+        stepComments[r] = document.getElementById('stepMenuText').value || '';
+        closeStepMenu();
+        initGrid();
+        updateStatusBar();
+    };
+    
+    document.getElementById('stepMenuRemove').onclick = () => {
+        const menu = document.getElementById('stepMenu');
+        const r = parseInt(menu.dataset.row || '-1');
+        if (r < 0 || r >= ROWS) return;
+    
+        stepComments[r] = '';
+        closeStepMenu();
+        initGrid();
+        updateStatusBar();
+    };
+    
+    // Click outside closes the menu
+    document.addEventListener('mousedown', (e) => {
+        const menu = document.getElementById('stepMenu');
+        if (!menu.classList.contains('active')) return;
+        if (!e.target.closest('#stepMenu')) closeStepMenu();
+    });
+
+    
     const welcomeStartBtn = document.getElementById('welcomeStartBtn');
     if (welcomeStartBtn) {
         welcomeStartBtn.onclick = () => {
             closeModal('welcomeModal');
-            // Reset to a fresh empty project
+        
+            // Reset defaults only (removes all custom instruments)
+            onlyDefaultInstruments();
+        
+            // Reset pattern
             pattern = [];
-            for (let r = 0; r < ROWS; r++) {
-                pattern.push([null, null, null, null, null, null]);
-            }
+            for (let r = 0; r < ROWS; r++) pattern.push([null, null, null, null, null, null]);
+        
+            // Reset selection / paste / drag
             selectedCells.clear();
             copiedNotes = [];
             pasteMode = false;
             isDraggingNotes = false;
+        
+            // Reset step-start + comments
+            startPlaybackStep = null;
+            stepComments = new Array(ROWS).fill('');
+        
+            closeStepMenu();
+            initInsts();
             initGrid();
+            updateStatusBar();
         };
+
     }
     const welcomeOpenBtn = document.getElementById('welcomeOpenBtn');
     if (welcomeOpenBtn) {
@@ -2603,7 +2884,9 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
             selectedInstrument: selInst,
             selectedNote: selNote,
             instruments: insts,
-            pattern: pattern
+            pattern: pattern,
+            startPlaybackStep: startPlaybackStep,
+            stepComments: stepComments
         };
         
         const json = JSON.stringify(projectData, null, 2);
@@ -2650,6 +2933,18 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
                 
                 // Restore pattern
                 pattern = projectData.pattern || [];
+
+                startPlaybackStep = (projectData.startPlaybackStep === null || projectData.startPlaybackStep === undefined)
+                    ? null
+                    : parseInt(projectData.startPlaybackStep);
+                
+                stepComments = Array.isArray(projectData.stepComments) ? projectData.stepComments : [];
+                normalizeStepComments();
+                
+                if (startPlaybackStep !== null && (startPlaybackStep < 0 || startPlaybackStep >= ROWS)) {
+                    startPlaybackStep = null;
+                }
+
                 
                 // Update UI
                 initInsts();
@@ -2757,6 +3052,7 @@ pattern: ${JSON.stringify(pattern, null, 4).replace(/”([^”]+)”:/g, '$1:')}
     initNotes();
     initColors();
     updateModeButtons();
+    updateStatusBar();
     
     // Ensure audio context is ready
     document.addEventListener('click', () => {
